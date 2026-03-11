@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DPM FTE Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--font:'Outfit',sans-serif;--mono:'JetBrains Mono',monospace;--r:6px;--r2:10px;--r3:14px;--accent:#2563eb;--accent-h:#1d4ed8;--green:#16a34a;--amber:#d97706;--red:#dc2626;--violet:#7c3aed;}
+[data-theme="light"]{--bg:#f4f5f7;--surface:#ffffff;--s2:#f8f9fb;--s3:#f1f3f6;--border:#e4e7ec;--border2:#d0d5dd;--text:#0f172a;--t2:#374151;--t3:#6b7280;--t4:#9ca3af;--sb:#1e2433;--sb-t:#94a3b8;--sb-t2:#4b5563;--sb-act:rgba(255,255,255,.07);--sb-act-t:#ffffff;--sb-sep:rgba(255,255,255,.06);--topbar:#ffffff;--sh:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);--sh2:0 4px 16px rgba(0,0,0,.07);--kv:#0f172a;--inp:#ffffff;--inp-b:#d0d5dd;--th:#f8f9fb;--trh:#f4f5f7;--mc:#2563eb;--na:#9ca3af;--rb:#f0fdf4;--rbb:#bbf7d0;--rba:#16a34a;--bkb:#f8f9fb;--bi-bg:#eff6ff;--bi-b:#bfdbfe;--bi-t:#1d4ed8;}
+[data-theme="dark"]{--bg:#0d1117;--surface:#161b27;--s2:#1c2233;--s3:#222a3d;--border:#252f45;--border2:#2e3d59;--text:#f1f5f9;--t2:#cbd5e1;--t3:#8892a4;--t4:#56647a;--sb:#0f131e;--sb-t:#7a8698;--sb-t2:#3d4a5c;--sb-act:rgba(37,99,235,.15);--sb-act-t:#93c5fd;--sb-sep:rgba(255,255,255,.05);--topbar:#161b27;--sh:0 1px 4px rgba(0,0,0,.4);--sh2:0 4px 20px rgba(0,0,0,.45);--kv:#f1f5f9;--inp:#1c2233;--inp-b:#252f45;--th:#1c2233;--trh:rgba(255,255,255,.02);--mc:#60a5fa;--na:#3d4a5c;--rb:rgba(22,163,74,.06);--rbb:rgba(22,163,74,.22);--rba:#16a34a;--bkb:#1c2233;--bi-bg:rgba(37,99,235,.1);--bi-b:rgba(59,130,246,.28);--bi-t:#93c5fd;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px;}
+.shell{display:flex;height:100vh;overflow:hidden;}
+/* SIDEBAR */
+.sidebar{width:220px;min-width:220px;background:var(--sb);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;border-right:1px solid var(--sb-sep);}
+.sb-brand{padding:20px 18px 16px;border-bottom:1px solid var(--sb-sep);}
+.sb-icon{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.95rem;margin-bottom:10px;box-shadow:0 2px 8px rgba(37,99,235,.35);}
+.sb-brand h1{font-size:.92rem;font-weight:700;color:#fff;letter-spacing:-.01em;line-height:1.2;}
+.sb-brand .sub{font-size:.66rem;color:var(--sb-t2);letter-spacing:.06em;text-transform:uppercase;font-weight:500;margin-top:2px;}
+.sb-section{padding:14px 14px 5px;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--sb-t2);}
+.nav{flex:1;padding:6px 8px;overflow-y:auto;}
+.ni{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r);cursor:pointer;color:var(--sb-t);font-weight:500;font-size:.82rem;transition:all .13s;border:none;background:none;width:100%;text-align:left;margin-bottom:1px;}
+.ni:hover{background:rgba(255,255,255,.05);color:#fff;}
+.ni.active{background:var(--sb-act);color:var(--sb-act-t);font-weight:600;}
+.ni .ic{font-size:.8rem;width:16px;text-align:center;flex-shrink:0;opacity:.75;}
+.ni.active .ic{opacity:1;}
+.sb-sep{height:1px;background:var(--sb-sep);margin:6px 6px;}
+.sb-bottom{padding:10px 8px;border-top:1px solid var(--sb-sep);}
+/* MAIN */
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-width:0;}
+/* TOPBAR */
+.topbar{background:var(--topbar);border-bottom:1px solid var(--border);padding:0 26px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--sh);}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-title{font-size:1rem;font-weight:700;color:var(--text);letter-spacing:-.01em;}
+.topbar-right{display:flex;gap:8px;align-items:center;}
+/* PAGES */
+.page{display:none;padding:22px 26px 40px;animation:pgIn .18s ease;}
+.page.active{display:block;}
+@keyframes pgIn{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:translateY(0);}}
+.ph{margin-bottom:20px;}
+.ph h2{font-size:1.25rem;font-weight:700;color:var(--text);letter-spacing:-.02em;margin-bottom:2px;}
+.ph p{font-size:.8rem;color:var(--t3);}
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);padding:18px 20px;margin-bottom:12px;box-shadow:var(--sh);}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.ct{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);display:flex;align-items:center;gap:7px;}
+.ctd{width:7px;height:7px;border-radius:2px;background:var(--accent);flex-shrink:0;}
+.ctd.g{background:var(--green);}.ctd.a{background:var(--amber);}.ctd.v{background:var(--violet);}
+/* KPI */
+.krow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);padding:16px 18px;box-shadow:var(--sh);position:relative;overflow:hidden;}
+.kbar{position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r3) var(--r3) 0 0;}
+.kbar.b{background:var(--accent);}.kbar.g{background:var(--green);}.kbar.a{background:var(--amber);}.kbar.v{background:var(--violet);}
+.kl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);margin-bottom:8px;}
+.kv{font-family:var(--mono);font-size:1.65rem;font-weight:500;color:var(--kv);line-height:1;margin-bottom:4px;letter-spacing:-.02em;}
+.ks{font-size:.69rem;color:var(--t4);}
+/* DIVIDER */
+.sdiv{display:flex;align-items:center;gap:10px;margin:16px 0 10px;}
+.sdiv span{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);white-space:nowrap;}
+.sdiv::before,.sdiv::after{content:'';flex:1;height:1px;background:var(--border);}
+/* FORM */
+.fg{display:grid;gap:10px;margin-bottom:12px;}
+.fg.g2{grid-template-columns:1fr 1fr;}
+.fg.g3{grid-template-columns:1fr 1fr 1fr;}
+.fg.g4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.fg.g5{grid-template-columns:1fr 1fr 1fr 1fr 1fr;}
+.field{display:flex;flex-direction:column;gap:4px;}
+.field label{font-size:.71rem;font-weight:600;color:var(--t3);letter-spacing:.02em;}
+.field input,.field select,.field textarea{background:var(--inp);border:1px solid var(--inp-b);border-radius:var(--r);padding:8px 10px;color:var(--text);font-family:var(--font);font-size:.83rem;outline:none;width:100%;transition:border-color .13s,box-shadow .13s;-webkit-appearance:none;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.12);}
+.field input[type="number"]{font-family:var(--mono);font-size:.81rem;}
+.field input[type="date"]{font-family:var(--mono);font-size:.8rem;}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 12 12'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m3 4.5 3 3 3-3'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;padding-right:26px;cursor:pointer;}
+/* SEGMENTED */
+.seg{display:flex;background:var(--s3);border:1px solid var(--border);border-radius:var(--r);padding:3px;gap:2px;}
+.sb2{flex:1;padding:6px 8px;border-radius:5px;cursor:pointer;text-align:center;font-size:.76rem;font-weight:600;color:var(--t3);transition:all .13s;user-select:none;border:none;background:none;}
+.sb2:hover{color:var(--t2);}
+.sb2.active{background:var(--surface);color:var(--text);box-shadow:var(--sh);border:1px solid var(--border);}
+[data-theme="dark"] .sb2.active{background:var(--s2);}
+/* BUTTONS */
+.btn{padding:8px 15px;border-radius:var(--r);font-family:var(--font);font-size:.8rem;font-weight:600;cursor:pointer;border:none;transition:all .13s;display:inline-flex;align-items:center;gap:6px;letter-spacing:.01em;white-space:nowrap;}
+.btn:active{transform:translateY(1px);}
+.btn-p{background:var(--accent);color:#fff;box-shadow:0 1px 3px rgba(37,99,235,.3);}
+.btn-p:hover{background:var(--accent-h);box-shadow:0 2px 8px rgba(37,99,235,.4);}
+.btn-o{background:var(--surface);border:1px solid var(--border);color:var(--t2);}
+.btn-o:hover{border-color:var(--border2);color:var(--text);}
+.btn-g{background:transparent;color:var(--t3);}
+.btn-g:hover{background:var(--s3);color:var(--t2);}
+.btn-d{background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.2);color:var(--red);}
+.btn-d:hover{background:rgba(220,38,38,.13);}
+.btn-sm{padding:5px 10px;font-size:.75rem;}
+.btn-lg{padding:10px 20px;font-size:.87rem;}
+.brow{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+/* TABLES */
+.tw{overflow-x:auto;border-radius:var(--r2);border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:var(--th);}
+th{padding:9px 13px;text-align:left;font-size:.68rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:9px 13px;border-bottom:1px solid var(--border);font-size:.81rem;color:var(--t2);}
+tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:var(--trh);}
+td.m{font-family:var(--mono);font-size:.78rem;color:var(--mc);}
+td.b{font-weight:600;color:var(--text);}
+td.na{color:var(--na);font-style:italic;}
+td.c{text-align:center;}
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:99px;font-size:.72rem;font-weight:600;}
+.bok{background:rgba(22,163,74,.09);border:1px solid rgba(22,163,74,.22);color:var(--green);}
+.bwarn{background:rgba(217,119,6,.09);border:1px solid rgba(217,119,6,.22);color:var(--amber);}
+.berr{background:rgba(220,38,38,.09);border:1px solid rgba(220,38,38,.22);color:var(--red);}
+.binfo{background:var(--bi-bg);border:1px solid var(--bi-b);color:var(--bi-t);}
+.bneu{background:var(--s3);border:1px solid var(--border);color:var(--t3);}
+.vbar{min-height:28px;margin:8px 0 4px;}
+/* RESULT */
+.rbox{background:var(--rb);border:1px solid var(--rbb);border-left:3px solid var(--rba);border-radius:var(--r3);padding:18px 20px;margin-top:12px;}
+.rbt{font-size:.87rem;font-weight:700;color:var(--green);margin-bottom:12px;display:flex;align-items:center;gap:7px;}
+.rkrow{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:12px;}
+.rk{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:11px 13px;box-shadow:var(--sh);}
+.rkl{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t4);margin-bottom:4px;}
+.rkv{font-family:var(--mono);font-size:1.05rem;color:var(--text);font-weight:500;}
+.bkd{background:var(--bkb);border:1px solid var(--border);border-radius:var(--r);padding:11px 13px;font-size:.79rem;color:var(--t3);line-height:2;}
+.bkd b{color:var(--t2);font-weight:600;}
+/* ACCORDION */
+.acc{border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:10px;}
+.ach{background:var(--s2);padding:11px 15px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:.8rem;font-weight:600;color:var(--t2);user-select:none;transition:background .13s;}
+.ach:hover{background:var(--s3);}
+.ach .arr{transition:transform .2s;color:var(--t4);font-size:.7rem;}
+.ach.open .arr{transform:rotate(180deg);}
+.acb{max-height:0;overflow:hidden;transition:max-height .35s ease;}
+.acb.open{max-height:1200px;}
+.acbi{padding:14px;}
+/* CHARTS */
+.cw{background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);padding:16px 16px 12px;box-shadow:var(--sh);}
+.cl{font-size:.69rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);margin-bottom:12px;display:flex;align-items:center;gap:7px;}
+.cld{width:6px;height:6px;border-radius:2px;background:var(--accent);}
+canvas{max-height:230px;}
+.cg2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+/* STAGE */
+.stgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+.stc{background:var(--s2);border:1.5px solid var(--border);border-radius:var(--r);padding:9px 11px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:.8rem;font-weight:500;color:var(--t2);transition:all .13s;user-select:none;}
+.stc:hover{border-color:var(--border2);color:var(--text);}
+.stc.checked{background:rgba(37,99,235,.07);border-color:rgba(37,99,235,.3);color:var(--accent);}
+.scb{width:15px;height:15px;border:1.5px solid var(--border2);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:.62rem;transition:all .13s;flex-shrink:0;color:transparent;}
+.stc.checked .scb{background:var(--accent);border-color:var(--accent);color:#fff;}
+/* PROJECT LIST */
+.plist{display:flex;flex-direction:column;gap:5px;max-height:340px;overflow-y:auto;padding-right:2px;}
+.pi{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:10px 13px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all .13s;}
+.pi:hover{border-color:var(--border2);}
+.pi.sel{border-color:var(--accent);background:rgba(37,99,235,.06);}
+.pin{font-weight:600;font-size:.82rem;color:var(--text);}
+.pit{font-size:.7rem;color:var(--t4);margin-top:1px;}
+.pi-meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:3px;}
+.pi-badge{font-size:.65rem;padding:2px 7px;border-radius:99px;font-weight:600;}
+/* TOAST */
+.twrap{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none;}
+.toast{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:10px 15px;font-size:.8rem;color:var(--text);box-shadow:var(--sh2);display:flex;align-items:center;gap:9px;max-width:320px;pointer-events:all;animation:tin .2s ease;}
+.toast.ok{border-left:3px solid var(--green);}
+.toast.err{border-left:3px solid var(--red);}
+.toast.warn{border-left:3px solid var(--amber);}
+@keyframes tin{from{opacity:0;transform:translateX(10px);}to{opacity:1;transform:translateX(0);}}
+/* TABS */
+.tabbar{display:flex;gap:2px;background:var(--s3);border:1px solid var(--border);border-radius:var(--r);padding:3px;margin-bottom:12px;}
+.tabi{flex:1;padding:5px 10px;border-radius:5px;text-align:center;cursor:pointer;font-size:.75rem;font-weight:600;color:var(--t3);transition:all .13s;border:none;background:none;}
+.tabi:hover{color:var(--t2);}
+.tabi.active{background:var(--surface);color:var(--text);box-shadow:var(--sh);border:1px solid var(--border);}
+[data-theme="dark"] .tabi.active{background:var(--s2);}
+/* EMPTY */
+.es{text-align:center;padding:32px 20px;color:var(--t4);}
+.es .ei{font-size:1.8rem;margin-bottom:9px;opacity:.55;}
+.es p{font-size:.8rem;line-height:1.6;}
+/* PORTFOLIO */
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+/* DPM */
+.dpm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;max-height:260px;overflow-y:auto;padding-right:4px;}
+.dpm-card{background:var(--s2);border:1.5px solid var(--border);border-radius:var(--r);padding:10px 12px;cursor:pointer;transition:all .13s;user-select:none;}
+.dpm-card:hover{border-color:var(--border2);}
+.dpm-card.sel{border-color:var(--accent);background:rgba(37,99,235,.07);}
+.dpm-name{font-weight:600;font-size:.82rem;color:var(--text);}
+.dpm-email{font-size:.7rem;color:var(--t4);margin-top:2px;word-break:break-all;}
+.dpm-role{display:inline-flex;align-items:center;gap:4px;margin-top:5px;}
+.dpm-role select{padding:3px 7px;font-size:.72rem;border-radius:4px;background:var(--inp);border:1px solid var(--inp-b);color:var(--text);font-family:var(--font);outline:none;cursor:pointer;}
+.dpm-role select:focus{border-color:var(--accent);}
+/* PROJECT CODE */
+.proj-code{font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--accent);background:var(--bi-bg);border:1px solid var(--bi-b);border-radius:var(--r);padding:8px 14px;letter-spacing:.05em;display:inline-block;cursor:pointer;}
+.proj-code:hover{background:rgba(37,99,235,.12);}
+/* UTIL */
+.hidden{display:none!important;}
+.mt4{margin-top:4px;}.mt8{margin-top:8px;}.mt12{margin-top:12px;}.mt16{margin-top:16px;}
+.mb0{margin-bottom:0!important;}
+.dur-toggle{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+.dur-tab{padding:5px 12px;border-radius:var(--r);font-size:.76rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--s3);color:var(--t3);transition:all .13s;}
+.dur-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+/* STATUS DOT */
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+.status-dot.active{background:var(--green);box-shadow:0 0 6px rgba(22,163,74,.5);}
+.status-dot.inactive{background:var(--t4);}
+/* RESPONSIVE */
+@media(max-width:1024px){.krow{grid-template-columns:1fr 1fr;}.pgrid{grid-template-columns:1fr;}}
+@media(max-width:768px){.sidebar{width:52px;min-width:52px;}.sb-brand h1,.sb-brand .sub,.ni span,.sb-section{display:none;}.fg.g5,.fg.g4{grid-template-columns:1fr 1fr;}.cg2{grid-template-columns:1fr;}.rkrow{grid-template-columns:1fr 1fr;}}
+@media(max-width:520px){.krow{grid-template-columns:1fr;}.page{padding:14px;}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-icon">🌐</div>
+      <h1>DPM FTE</h1>
+      <div class="sub">Network Estimator</div>
+    </div>
+    <nav class="nav">
+      <div class="sb-section">Estimators</div>
+      <button class="ni active" data-page="dashboard" onclick="gotoPage('dashboard')"><span class="ic">▦</span><span>Dashboard</span></button>
+      <button class="ni" data-page="wan" onclick="gotoPage('wan')"><span class="ic">◎</span><span>WAN Estimator</span></button>
+      <button class="ni" data-page="lan" onclick="gotoPage('lan')"><span class="ic">⬡</span><span>LAN Estimator</span></button>
+      <div class="sb-sep"></div>
+      <div class="sb-section">Workspace</div>
+      <button class="ni" data-page="projects" onclick="gotoPage('projects')"><span class="ic">⊞</span><span>Projects</span></button>
+      <button class="ni" data-page="dpms" onclick="gotoPage('dpms')"><span class="ic">👤</span><span>DPM Directory</span></button>
+    </nav>
+    <div class="sb-bottom">
+      <button class="ni" onclick="toggleTheme()" style="width:100%"><span class="ic" id="theme-ic">☀</span><span id="theme-lbl">Light Mode</span></button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="topbar-title" id="page-title">Dashboard</span>
+      </div>
+      <div class="topbar-right">
+        <span id="topbar-badge" class="badge bneu">No calculation yet</span>
+      </div>
+    </div>
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="page active" id="page-dashboard">
+      <div class="ph"><h2>Project Dashboard</h2><p>Last calculated FTE result and effort breakdown</p></div>
+      <div class="krow">
+        <div class="kpi"><div class="kbar b"></div><div class="kl">Total Man-Days</div><div class="kv" id="kpi-mds">—</div><div class="ks">Cumulative MDs across all sites</div></div>
+        <div class="kpi"><div class="kbar g"></div><div class="kl">MDs per Month</div><div class="kv" id="kpi-pm">—</div><div class="ks">Evenly distributed over project</div></div>
+        <div class="kpi"><div class="kbar a"></div><div class="kl">FTE Required</div><div class="kv" id="kpi-fte">—</div><div class="ks">At 18 MD/month capacity</div></div>
+        <div class="kpi"><div class="kbar v"></div><div class="kl">HC Recommendation</div><div class="kv" id="kpi-hc" style="font-size:1rem;padding-top:4px">—</div><div class="ks">Head-count &amp; utilisation</div></div>
+      </div>
+      <div class="cg2">
+        <div class="cw"><div class="cl"><span class="cld"></span>WAN — MDs by Product</div><canvas id="dash-wan-chart"></canvas></div>
+        <div class="cw"><div class="cl"><span class="cld" style="background:var(--green)"></span>LAN — MDs by Tier</div><canvas id="dash-lan-chart"></canvas></div>
+      </div>
+      <div class="cw mb0"><div class="cl"><span class="cld" style="background:var(--amber)"></span>Monthly Effort Distribution</div><canvas id="dash-monthly-chart"></canvas></div>
+      <div class="sdiv mt16"><span>Getting started</span></div>
+      <div class="card mb0">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          <div style="padding:13px 15px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r)"><div style="font-weight:700;font-size:.8rem;margin-bottom:5px">① Configure Inputs</div><div style="font-size:.76rem;color:var(--t3);line-height:1.6">Set project name, duration, total sites, and mode in WAN or LAN tab.</div></div>
+          <div style="padding:13px 15px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r)"><div style="font-weight:700;font-size:.8rem;margin-bottom:5px">② Allocate DPMs</div><div style="font-size:.76rem;color:var(--t3);line-height:1.6">Assign DPMs from the directory and allocate sites to products or tiers.</div></div>
+          <div style="padding:13px 15px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r)"><div style="font-weight:700;font-size:.8rem;margin-bottom:5px">③ Calculate &amp; Export</div><div style="font-size:.76rem;color:var(--t3);line-height:1.6">Click Calculate for FTE results, export to Excel, and save your project.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ WAN ══ -->
+    <div class="page" id="page-wan">
+      <div class="ph"><h2>WAN Estimator</h2><p>Calculate FTE for WAN network deployment projects</p></div>
+
+      <!-- Project Info -->
+      <div class="card">
+        <div class="ch"><div class="ct"><span class="ctd"></span>Project Information</div></div>
+        <div class="fg g3">
+          <div class="field"><label>Project Name</label><input type="text" id="w-proj-name" placeholder="e.g. Q3 WAN EMEA Rollout"/></div>
+          <div class="field"><label>Project Status</label>
+            <div class="seg" id="w-status">
+              <button class="sb2 active" data-val="Active" onclick="rc(this,'w-status')">Active</button>
+              <button class="sb2" data-val="Inactive" onclick="rc(this,'w-status')">Inactive</button>
+            </div>
+          </div>
+          <div class="field"><label>DPM Acting as PM?</label>
+            <div class="seg" id="w-pm-role">
+              <button class="sb2 active" data-val="No" onclick="rc(this,'w-pm-role')">No</button>
+              <button class="sb2" data-val="Yes" onclick="rc(this,'w-pm-role')">Yes</button>
+            </div>
+          </div>
+        </div>
+        <!-- Duration -->
+        <div style="margin-bottom:8px">
+          <div style="font-size:.71rem;font-weight:600;color:var(--t3);margin-bottom:6px;letter-spacing:.02em">Duration</div>
+          <div class="dur-toggle">
+            <button class="dur-tab active" id="w-dur-tab-m" onclick="swDur('w','months')">Enter Months</button>
+            <button class="dur-tab" id="w-dur-tab-d" onclick="swDur('w','dates')">Start / End Date</button>
+          </div>
+        </div>
+        <div id="w-dur-months" class="fg g2">
+          <div class="field"><label>Duration (Months)</label><input type="number" id="w-months" placeholder="e.g. 6" min="1" step="1"/></div>
+          <div class="field" style="align-self:end"><span style="font-size:.78rem;color:var(--t4)" id="w-dur-calc-label"></span></div>
+        </div>
+        <div id="w-dur-dates" class="fg g2 hidden">
+          <div class="field"><label>Start Date</label><input type="date" id="w-start-date" oninput="calcDurFromDates('w')"/></div>
+          <div class="field"><label>End Date</label><input type="date" id="w-end-date" oninput="calcDurFromDates('w')"/></div>
+        </div>
+      </div>
+
+      <!-- Params -->
+      <div class="card">
+        <div class="ch"><div class="ct"><span class="ctd"></span>Project Parameters</div></div>
+        <div class="fg g3">
+          <div class="field"><label>Total Sites</label><input type="number" id="w-sites" placeholder="e.g. 100" min="1" step="1" oninput="updWanVal()"/></div>
+          <div class="field"><label>Project Type</label><select id="w-type"><option>Overlay</option><option>Underlay</option><option>Both</option></select></div>
+          <div class="field"><label>Migration Support <span style="color:var(--t4);font-weight:400">(+0.5×sites)</span></label>
+            <div class="seg" id="w-migration"><button class="sb2 active" data-val="No" onclick="rc(this,'w-migration')">No</button><button class="sb2" data-val="Yes" onclick="rc(this,'w-migration')">Yes</button></div>
+          </div>
+        </div>
+        <div class="fg g2">
+          <div class="field"><label>ABACOS</label>
+            <div class="seg" id="w-abacos"><button class="sb2 active" data-val="No" onclick="rc(this,'w-abacos')">No</button><button class="sb2" data-val="Yes" onclick="rc(this,'w-abacos')">Yes</button></div>
+          </div>
+          <div class="field"><label>Calculation Mode</label>
+            <div class="seg" id="w-mode"><button class="sb2 active" data-val="Standard" onclick="rc(this,'w-mode');togWanOvrd()">Standard</button><button class="sb2" data-val="Non-standard" onclick="rc(this,'w-mode');togWanOvrd()">Non-standard</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DPM Allocation -->
+      <div class="card">
+        <div class="ch"><div class="ct"><span class="ctd v"></span>Assigned DPMs</div><button class="btn btn-o btn-sm" onclick="openDpmPicker('w')">+ Assign DPMs</button></div>
+        <div id="w-dpm-assigned"><span style="font-size:.8rem;color:var(--t4)">No DPMs assigned yet. Click "Assign DPMs" to add.</span></div>
+      </div>
+
+      <!-- Product Allocation -->
+      <div class="card">
+        <div class="ch"><div class="ct"><span class="ctd g"></span>Product Allocation</div></div>
+        <div class="fg g5">
+          <div class="field"><label>Product</label><select id="w-add-prod"></select></div>
+          <div class="field"><label>Connectivity Mode</label><select id="w-add-mode"></select></div>
+          <div class="field"><label>Sites</label><input type="number" id="w-add-sites" placeholder="0" min="0" step="1"/></div>
+          <div class="field"><label>Complexity %</label><input type="number" id="w-add-comp" placeholder="100" min="0" max="200" step="1"/></div>
+          <div class="field hidden" id="w-ovrd-f"><label>Override MD/site</label><input type="number" id="w-add-ovrd" placeholder="0.000" min="0" step="0.001"/></div>
+        </div>
+        <div class="brow mt4">
+          <button class="btn btn-p" onclick="addWI()">+ Add Item</button>
+          <button class="btn btn-o btn-sm" onclick="rmLastW()">↩ Remove Last</button>
+          <button class="btn btn-d btn-sm" onclick="clrW()">✕ Clear All</button>
+        </div>
+        <div class="vbar" id="wan-val"></div>
+        <div class="tw"><table><thead><tr><th>#</th><th>Product</th><th>Mode</th><th>Sites</th><th>Complexity</th><th>Override MD/site</th><th>Est. MDs</th></tr></thead><tbody id="wan-tbody"></tbody></table></div>
+      </div>
+
+      <div class="acc"><div class="ach" onclick="togAcc(this)"><span>Reference — Base MD/site by Product &amp; Mode</span><span class="arr">▾</span></div><div class="acb"><div class="acbi"><div class="tw" id="wan-ref-tbl"></div></div></div></div>
+
+      <div id="wan-res" class="hidden">
+        <div class="sdiv"><span>Results</span></div>
+        <div class="cg2">
+          <div class="cw"><div class="cl"><span class="cld"></span>MDs by Product</div><canvas id="wan-bar-chart"></canvas></div>
+          <div class="cw"><div class="cl"><span class="cld" style="background:var(--amber)"></span>Monthly Effort</div><canvas id="wan-monthly-chart"></canvas></div>
+        </div>
+        <div class="rbox" id="wan-rbox"></div>
+      </div>
+
+      <div class="sdiv mt16"><span>Actions</span></div>
+      <div class="brow">
+        <button class="btn btn-p btn-lg" onclick="calcWan()">Calculate WAN FTE</button>
+        <button class="btn btn-o" onclick="expWanXls()">↓ Export to Excel</button>
+        <button class="btn btn-g btn-sm" onclick="saveCurrentProject()">⊞ Save Project</button>
+      </div>
+    </div>
+
+    <!-- ══ LAN ══ -->
+    <div class="page" id="page-lan">
+      <div class="ph"><h2>LAN Estimator</h2><p>Calculate FTE for LAN network deployment projects</p></div>
+
+      <!-- Project Info -->
+      <div class="card">
+        <div class="ch"><div class="ct"><span class="ctd"></span>Project Information</div></div>
+        <div class="fg g3">
+          <div class="field"><label>Project Name</label><input type="text" id="l-proj-name" placeholder="e.g. Q3 LAN Cairo Rollout"/></div>
+          <div class="field"><label>Project Status</label>
+            <div class="seg" id="l-status">
+              <button class="sb2 active" data-val="Active" onclick="rc(this,'l-status')">Active</button>
+              <button class="sb2" data-val="Inactive" onclick="rc(this,'l-status')">Inactive</button>
+            </div>
+          </div>
+          <div class="field"><label>DPM Acting as PM?</label>
+            <div class="seg" id="l-pm-role">
+              <button class="sb2 active" data-val="No" onclick="rc(this,'l-pm-role')">No</button>
+              <button class="sb2" data-val="Yes" onclick="rc(this,'l-pm-role')">Yes</button>
+            </div>
+          </div>
+        </div>
+        <div style="margin-bottom:8px">
+          <div style="font-size:.71rem;font-weight:600;color:var(--t3);margin-bottom:6px;letter-spacing:.02em">Duration</div>
+          <div class="dur-toggle">
+            <button class="dur-tab active" id="l-dur-tab-m" onclick="swDur('l','months')">Enter Months</button>
+            <button class="dur-tab" id="l-dur-tab-d" onclick="swDur('l','dates')">Start / End Date</button>
+          </div>
+        </div>
+        <div id="l-dur-months" class="fg g2">
+          <div class="field"><label>Duration (Months)</label><input type="number" id="l-months" placeholder="e.g. 6" min="1" step="1"/></div>
+          <div class="field" style="align-self:end"><span style="font-size:.78rem;color:var(--t4)" id="l-dur-calc-label"></span></div>
+        </div>
+        <div id="l-dur-dates" class="fg g2 hidden">
+          <div class="field"><label>Start Date</label><input type="date" id="l-start-date" oninput="calcDurFromDates('l')"/></div>
+          <div class="field"><label>End Date</label><input type="date" id="l-end-date" oninput="calcDurFromDates('l')"/></div>
+        </div>
+      </div>
+
+      <!-- Params -->
+      <div class="card">
+        <div class="ch"><div class="ct"><span class="ctd"></span>Project Parameters</div></div>
+        <div class="fg g3">
+          <div class="field"><label>Total Sites</label><input type="number" id="l-sites" placeholder="e.g. 50" min="1" step="1" oninput="updLanVal()"/></div>
+          <div class="field"><label>Routers <span style="color:var(--t4);font-weight:400">(fallback tier)</span></label><input type="number" id="l-routers" placeholder="0" min="0" step="1"/></div>
+          <div class="field"><label>FLAN Used</label>
+            <div class="seg" id="l-flan"><button class="sb2 active" data-val="No" onclick="rc(this,'l-flan')">No</button><button class="sb2" data-val="Yes" onclick="rc(this,'l-flan')">Yes</button></div>
+          </div>
+        </div>
+        <div class="fg g2">
+          <div class="field"><label>Calculation Mode</label>
+            <div class="seg" id="l-mode"><button class="sb2 active" data-val="Standard" onclick="rc(this,'l-mode');togLanMode()">Standard</button><button class="sb2" data-val="Non-standard" onclick="rc(this,'l-mode');togLanMode()">Non-standard</button><button class="sb2" data-val="Choose Stage" onclick="rc(this,'l-mode');togLanMode()">By Stage</button></div>
+          </div>
+          <div class="field hidden" id="l-fb-f"><label>Fallback Override MD/site</label><input type="number" id="l-fb-ovrd" placeholder="0.000" min="0" step="0.001"/></div>
+        </div>
+        <div id="l-stage-sec" class="hidden mt12">
+          <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);margin-bottom:9px">Select Stages to Include</div>
+          <div class="stgrid" id="l-stages"></div>
+          <div class="brow mt8">
+            <button class="btn btn-o btn-sm" onclick="setAllStages()">All Stages</button>
+            <button class="btn btn-o btn-sm" onclick="setStages(['Design','Planning'])">Design + Planning</button>
+            <button class="btn btn-o btn-sm" onclick="setStages(['Implement','Closing'])">Implement + Closing</button>
+            <button class="btn btn-d btn-sm" onclick="setStages([])">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- DPM Allocation -->
+      <div class="card">
+        <div class="ch"><div class="ct"><span class="ctd v"></span>Assigned DPMs</div><button class="btn btn-o btn-sm" onclick="openDpmPicker('l')">+ Assign DPMs</button></div>
+        <div id="l-dpm-assigned"><span style="font-size:.8rem;color:var(--t4)">No DPMs assigned yet. Click "Assign DPMs" to add.</span></div>
+      </div>
+
+      <!-- Tier Allocation -->
+      <div class="card">
+        <div class="ch"><div class="ct"><span class="ctd g"></span>Tier Allocation</div></div>
+        <div class="fg g4">
+          <div class="field"><label>Tier</label><select id="l-add-tier"></select></div>
+          <div class="field"><label>Sites</label><input type="number" id="l-add-sites" placeholder="0" min="0" step="1"/></div>
+          <div class="field"><label>Complexity %</label><input type="number" id="l-add-comp" placeholder="100" min="0" max="200" step="1"/></div>
+          <div class="field hidden" id="l-lovrd-f"><label>Override MD/site</label><input type="number" id="l-add-ovrd" placeholder="0.000" min="0" step="0.001"/></div>
+        </div>
+        <div class="brow mt4">
+          <button class="btn btn-p" onclick="addLI()">+ Add Tier</button>
+          <button class="btn btn-o btn-sm" onclick="rmLastL()">↩ Remove Last</button>
+          <button class="btn btn-d btn-sm" onclick="clrL()">✕ Clear All</button>
+        </div>
+        <div class="vbar" id="lan-val"></div>
+        <div class="tw"><table><thead><tr><th>#</th><th>Tier</th><th>Sites</th><th>Complexity</th><th>Override MD/site</th><th>Est. MDs</th></tr></thead><tbody id="lan-tbody"></tbody></table></div>
+      </div>
+
+      <div class="acc"><div class="ach" onclick="togAcc(this)"><span>Reference — LAN MD/site by Tier</span><span class="arr">▾</span></div><div class="acb"><div class="acbi"><div class="tw" id="lan-ref-tbl"></div></div></div></div>
+      <div class="acc"><div class="ach" onclick="togAcc(this)"><span>Reference — Stage Hours Detail</span><span class="arr">▾</span></div><div class="acb"><div class="acbi"><div class="tabbar" id="stage-detail-tabs"></div><div class="tw" id="stage-ref-tbl"></div></div></div></div>
+
+      <div id="lan-res" class="hidden">
+        <div class="sdiv"><span>Results</span></div>
+        <div class="cg2">
+          <div class="cw"><div class="cl"><span class="cld" style="background:var(--green)"></span>MDs by Tier</div><canvas id="lan-bar-chart"></canvas></div>
+          <div class="cw"><div class="cl"><span class="cld" style="background:var(--amber)"></span>Monthly Effort</div><canvas id="lan-monthly-chart"></canvas></div>
+        </div>
+        <div class="rbox" id="lan-rbox"></div>
+      </div>
+
+      <div class="sdiv mt16"><span>Actions</span></div>
+      <div class="brow">
+        <button class="btn btn-p btn-lg" onclick="calcLan()">Calculate LAN FTE</button>
+        <button class="btn btn-o" onclick="expLanXls()">↓ Export to Excel</button>
+        <button class="btn btn-g btn-sm" onclick="saveCurrentProject()">⊞ Save Project</button>
+      </div>
+    </div>
+
+    <!-- ══ PROJECTS ══ -->
+    <div class="page" id="page-projects">
+      <div class="ph"><h2>Projects</h2><p>Save, load, and manage your FTE estimation projects</p></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div class="card mb0">
+          <div class="ch"><div class="ct"><span class="ctd"></span>Save Current Project</div></div>
+          <div class="field mt4" style="margin-bottom:11px"><label>Project Name</label><input type="text" id="save-name" placeholder="e.g. Q3_WAN_EMEA_Rollout"/></div>
+          <button class="btn btn-p" onclick="saveProject()">Save Project</button>
+        </div>
+        <div class="card mb0">
+          <div class="ch"><div class="ct"><span class="ctd a"></span>Import Project JSON</div></div>
+          <p style="color:var(--t3);font-size:.79rem;margin-top:3px;margin-bottom:13px;line-height:1.6">Upload a previously exported <code style="font-family:var(--mono);font-size:.77rem;background:var(--s3);padding:1px 5px;border-radius:3px">.json</code> file to restore all settings.</p>
+          <label class="btn btn-o" style="cursor:pointer">↑ Upload JSON<input type="file" accept=".json" style="display:none" onchange="uploadProject(this)"/></label>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct"><span class="ctd g"></span>Saved Projects</div></div>
+        <div id="proj-list-wrap"><div class="es"><div class="ei">⊞</div><p>No saved projects yet.<br/>Save your first project above.</p></div></div>
+        <div class="brow mt12">
+          <button class="btn btn-p btn-sm" onclick="loadSelProj()">Load Selected</button>
+          <button class="btn btn-o btn-sm" onclick="dlSelProj()">↓ Download JSON</button>
+          <button class="btn btn-o btn-sm" onclick="expSelProjXls()">↓ Export Excel</button>
+          <button class="btn btn-d btn-sm" onclick="delSelProj()">✕ Delete</button>
+        </div>
+      </div>
+      <div class="card mb0">
+        <div class="ch"><div class="ct"><span class="ctd v"></span>Portfolio Dashboard — All Saved Projects</div></div>
+        <div class="pgrid mt12">
+          <div class="cw"><div class="cl"><span class="cld"></span>WAN — Total MDs by Product</div><canvas id="port-wan-md"></canvas></div>
+          <div class="cw"><div class="cl"><span class="cld" style="background:var(--green)"></span>LAN — Total MDs by Tier</div><canvas id="port-lan-md"></canvas></div>
+          <div class="cw"><div class="cl"><span class="cld" style="background:var(--amber)"></span>WAN — Sites by Product</div><canvas id="port-wan-sites"></canvas></div>
+          <div class="cw"><div class="cl"><span class="cld" style="background:var(--violet)"></span>LAN — Sites by Tier</div><canvas id="port-lan-sites"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ DPM DIRECTORY ══ -->
+    <div class="page" id="page-dpms">
+      <div class="ph"><h2>DPM Directory</h2><p>Full list of DPMs — click a card to view details</p></div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="ch"><div class="ct"><span class="ctd"></span>Search DPMs</div></div>
+        <div class="field"><label>Filter by name or email</label><input type="text" id="dpm-search" placeholder="Type to filter..." oninput="renderDpmDir()"/></div>
+      </div>
+      <div class="card mb0">
+        <div class="ch"><div class="ct"><span class="ctd g"></span>All DPMs <span id="dpm-count" style="font-weight:400;color:var(--t4);text-transform:none;font-size:.75rem;letter-spacing:0;margin-left:4px"></span></div>
+          <button class="btn btn-o btn-sm" onclick="expDpmXls()">↓ Export Directory</button>
+        </div>
+        <div class="dpm-grid" id="dpm-dir-grid"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- DPM PICKER MODAL -->
+<div id="dpm-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);padding:24px;width:680px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:var(--sh2);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-weight:700;font-size:1rem;color:var(--text)">Assign DPMs to Project</div>
+      <button class="btn btn-o btn-sm" onclick="closeDpmPicker()">✕ Close</button>
+    </div>
+    <div class="field" style="margin-bottom:12px"><label>Filter</label><input type="text" id="dpm-modal-search" placeholder="Search by name or email..." oninput="renderModalDpms()"/></div>
+    <div class="dpm-grid" id="dpm-modal-grid" style="max-height:360px"></div>
+    <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-p" onclick="confirmDpmPicker()">Confirm Selection</button>
+      <button class="btn btn-o" onclick="closeDpmPicker()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="twrap" id="twrap"></div>
+
+<script>
+// ══ THEME ══
+let dark=localStorage.getItem('dpm_theme')==='dark';
+function applyTheme(){document.documentElement.setAttribute('data-theme',dark?'dark':'light');document.getElementById('theme-ic').textContent=dark?'☾':'☀';document.getElementById('theme-lbl').textContent=dark?'Dark Mode':'Light Mode';if(typeof Chart!=='undefined')updChartDefs();}
+function toggleTheme(){dark=!dark;localStorage.setItem('dpm_theme',dark?'dark':'light');applyTheme();updDashCharts();if(LWR)renderWanCharts(LWR);if(LLR)renderLanCharts(LLR);if(Object.keys(SP).length)buildPortfolio();}
+function updChartDefs(){Chart.defaults.color=dark?'#8892a4':'#6b7280';Chart.defaults.borderColor=dark?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)';}
+applyTheme();
+
+// ══ ACCORDION ══
+function togAcc(h){h.classList.toggle('open');const b=h.nextElementSibling;b.classList.toggle('open');if(b.classList.contains('open'))buildRefTbls();}
+
+// ══ DATA ══
+const PRODUCTS=["SD-WAN","BVPN Corporate","IEL","BVPN Small","Internet Essential","Internet Platinum","Flexible SD-Branch"];
+const MODES=["Access only","1 CPE / No Continuity","2 CPEs / With Continuity","Single vEdge CPE","Dual vEdge CPE","Dual","Air Backup","Always-On"];
+const BMD={"Access only":{"SD-WAN":.25,"BVPN Corporate":.25,"IEL":.25,"BVPN Small":.25,"Internet Essential":.25,"Internet Platinum":.25,"Flexible SD-Branch":.25},"1 CPE / No Continuity":{"SD-WAN":1.125,"BVPN Corporate":1.25,"IEL":1.25,"BVPN Small":1.25,"Internet Essential":1.25,"Internet Platinum":1.25},"2 CPEs / With Continuity":{"SD-WAN":2.25,"BVPN Corporate":2.5,"IEL":2.5,"BVPN Small":2.5,"Internet Essential":2.5,"Internet Platinum":2.5},"Single vEdge CPE":{"SD-WAN":1.125,"BVPN Corporate":1.125,"IEL":1.125,"BVPN Small":1.125,"Internet Essential":1.125,"Internet Platinum":1.125,"Flexible SD-Branch":1.125},"Dual vEdge CPE":{"SD-WAN":2.25,"BVPN Corporate":2.25,"IEL":2.25,"BVPN Small":2.25,"Internet Essential":2.25,"Internet Platinum":2.25,"Flexible SD-Branch":2.25},"Dual":{"BVPN Corporate":2.5,"IEL":2.5,"BVPN Small":2.5,"Internet Essential":2.5,"Internet Platinum":2.5},"Air Backup":{"BVPN Corporate":1.25,"IEL":1.25},"Always-On":{"BVPN Corporate":1.25,"IEL":1.25}};
+function lkMD(m,p){return BMD[m]?.[p]??null;}
+const LT=[{name:"OD/XS",range:"<3 devices",loe:2.4},{name:"S",range:"3–10 devices",loe:3.3},{name:"M",range:"11–50 devices",loe:5.3},{name:"Large",range:"51–100 devices",loe:9.4},{name:"XL",range:"100–500 devices",loe:17.3},{name:"Campus",range:">500 devices",loe:33.3}];
+const LTL=LT.map(t=>`${t.name} (${t.range})`);
+const L2T={};const T2L={};
+LT.forEach(t=>{L2T[`${t.name} (${t.range})`]=t.name;T2L[t.name]=t.loe;});
+const LSH={"Design":{"Service Implementation set-up":{OD_XS:2,S:2,M:2,Large:2,XL:2,Campus:2},"Kick-off / scoping workshop(s)":{OD_XS:2,S:2,M:3,Large:3,XL:4,Campus:8},"Awareness":{OD_XS:1,S:1,M:1,Large:1.5,XL:2,Campus:4},"Customer communications (Local Site)":{OD_XS:.5,S:.5,M:1,Large:1.5,XL:2,Campus:2},"Validate solution design":{OD_XS:.5,S:.5,M:.5,Large:1,XL:1.5,Campus:2}},"Planning":{"Site surveys and/or data gathering":{OD_XS:1,S:2,M:4,Large:8,XL:16,Campus:32},"Operational engagement":{OD_XS:.5,S:.5,M:.5,Large:.5,XL:.5,Campus:.5},"Transformation Plan":{OD_XS:.5,S:.5,M:.5,Large:1,XL:1,Campus:1},"Migration plan(s)":{OD_XS:.5,S:.5,M:.5,Large:1,XL:1,Campus:1},"Communication towards the site":{OD_XS:.25,S:.25,M:.25,Large:.5,XL:1,Campus:2}},"Implement":{"Site deployment coordination":{OD_XS:.25,S:.25,M:.5,Large:1,XL:2,Campus:4},"Staging":{OD_XS:.5,S:.5,M:1,Large:2,XL:4,Campus:8},"Operational change control":{OD_XS:.5,S:.5,M:.5,Large:1,XL:2,Campus:4},"Site migrations":{OD_XS:4,S:8,M:16,Large:32,XL:64,Campus:128},"HOTO Mandatory tasks":{OD_XS:2,S:4,M:8,Large:16,XL:32,Campus:64}},"Closing":{"Success notification":{OD_XS:.5,S:.5,M:.5,Large:1,XL:1,Campus:1},"Site closure":{OD_XS:.5,S:.5,M:.5,Large:.5,XL:.5,Campus:.5}},"Controls":{"Weekly internal transformation update call & report":{OD_XS:1,S:1,M:1,Large:1,XL:1,Campus:1},"Weekly customer transformation progress call":{OD_XS:1,S:1,M:1,Large:1,XL:1,Campus:1}}};
+const LSN=Object.keys(LSH);
+function stageHrs(tier,stages){let t=0;(stages||[]).forEach(s=>{Object.values(LSH[s]||{}).forEach(pt=>{t+=pt[tier]||pt[tier.replace('/','_')]||0;});});return t/8;}
+function lTier(r){if(r<3)return{name:"OD/XS",loe:2.4};if(r<=10)return{name:"S",loe:3.3};if(r<=50)return{name:"M",loe:5.3};if(r<=100)return{name:"Large",loe:9.4};if(r<=500)return{name:"XL",loe:17.3};return{name:"Campus",loe:33.3};}
+
+// ══ DPM DATA ══
+const DPMS=[
+  {name:"Mai Abdel Wahed",email:"mai.abdelwahed@orange.com"},
+  {name:"Mira Rezk",email:"mira.rezk@orange.com"},
+  {name:"Diana Samy",email:"diana.samy@orange.com"},
+  {name:"Salma El Shazly",email:"salma.elshazly@orange.com"},
+  {name:"Noha Al Badry",email:"noha.ahmed@orange.com"},
+  {name:"Mahmoud Dahshan",email:"mahmoud.dahshan@orange.com"},
+  {name:"May Yassin",email:"may.yassin@orange.com"},
+  {name:"Emad Osman",email:"emad.osman@orange.com"},
+  {name:"Meryanos Elsahar",email:"meryanos.elsahar@orange.com"},
+  {name:"Nada Hossam",email:"nada.hossam@orange.com"},
+  {name:"Mona Tantawi",email:"mona.tantawi.ext@orange.com"},
+  {name:"Bassant Amgad",email:"bassant.amgad@orange.com"},
+  {name:"Rami Magdi",email:"rami.magdi.ext@orange.com"},
+  {name:"Sabah Ismail",email:"Sabah.Ismail@orange.com"},
+  {name:"Hussein Shehada",email:"hussein.shehada@orange.com"},
+  {name:"Ahmed Mohey",email:"ahmed.mohey@orange.com"},
+  {name:"Ahmed Danish",email:"ahmed.danish.ext@orange.com"},
+  {name:"Aliaa Medhat",email:"aliaa.medhat@orange.com"},
+  {name:"Andrew Basha",email:"Andrew.Basha@orange.com"},
+  {name:"Marah Osman",email:"marah.osman@orange.com"},
+  {name:"Marwan ElSawaf",email:"marwan.elsawaf.ext@orange.com"},
+  {name:"Mirna Ahmed",email:"mirna.ahmed@orange.com"},
+  {name:"Mohamed Hesham",email:"mohamed1.hesham@orange.com"},
+  {name:"Nasreen Ahmad",email:"nasreen.ahmad@orange.com"},
+  {name:"Farida Sherif",email:"farida.sherief.ext@orange.com"},
+  {name:"Nadiaa Ali",email:"nadia.ali.ext@orange.com"},
+  {name:"Lamis Fahmi",email:"lamismaher.fahmi.ext@orange.com"},
+  {name:"Karim Hendy",email:"karim.hendy@orange.com"},
+  {name:"Hussam El Aassar",email:"hussam.elaassar@orange.com"},
+  {name:"Sherif Basiony",email:"sherif.basiony.ext@orange.com"},
+  {name:"Nouran El Sakka",email:"nour.elsakka.ext@orange.com"},
+  {name:"Dona Kaid",email:"dona.kaid.ext@orange.com"},
+  {name:"Nada Megahed",email:"Nada.Megahed@orange.com"},
+  {name:"Omar Allam",email:"omar1.allam.ext@orange.com"},
+  {name:"Maryam Tharwat",email:"maryam.tharwat@orange.com"},
+  {name:"Mohamed Gewely",email:"mohamed.gewely.ext@orange.com"},
+  {name:"Ghadir Allam",email:"ghadir.allam.ext@orange.com"},
+  {name:"Rabab Khattab",email:"rabab.khattab.ext@orange.com"},
+  {name:"Ahmed Raslan",email:"ahmed1.raslan.ext@orange.com"},
+  {name:"Youssef El Nozahy",email:"youssef.elnozahy.ext@orange.com"},
+  {name:"Omar El Gammal",email:"Omar.elgammal@orange.com"},
+  {name:"Ahmed ElKhateeb",email:"ahmed.elkhateeb.ext@orange.com"},
+  {name:"Amina El Haggan",email:"amina.el-haggan.ext@orange.com"},
+  {name:"Abdelrahman Sadek",email:"abdelrahman.sadek.ext@orange.com"},
+  {name:"Hoda Elmehi",email:"hoda.elmehi@orange.com"},
+  {name:"Aly Maher",email:"aly.maher.ext@orange.com"},
+  {name:"Omar Galal",email:"omar.galal.ext@orange.com"},
+  {name:"Rose Khoury",email:"rose.khoury.ext@orange.com"},
+  {name:"Moustafa Shady",email:"moustafa.shady.ext@orange.com"},
+  {name:"Mira Fahim",email:"Mira.fahim@orange.com"},
+  {name:"Yasmine Zaky",email:"yasmeen.zaky.ext@orange.com"},
+  {name:"Mohamed Eid",email:"mohamed2.eid.ext@orange.com"},
+  {name:"Reem Mobarak",email:"reem.mobarak.ext@orange.com"},
+  {name:"Dina Zanaty",email:"dina.zanaty.ext@orange.com"},
+  {name:"Mai Aziz",email:"mai.aziz.ext@orange.com"},
+  {name:"Andrew Fakhry",email:"andrew.fakhry.ext@orange.com"},
+  {name:"Yara Zaki",email:"yara.zaki.ext@orange.com"},
+  {name:"Moutassem Helmy",email:"moutassem.helmy.ext@orange.com"},
+  {name:"Nadine Hashish",email:"nadine.hashish.ext@orange.com"},
+  {name:"Mohamed EL AZHARY",email:"mohamed.elazhary.ext@orange.com"},
+  {name:"Ahmed Osama",email:"ahmed.o.osama.ext@orange.com"},
+  {name:"Peter Ghaly",email:"peter.ghaly.ext@orange.com"},
+  {name:"Ahmed Hweedy",email:"ahmed.hweedy.ext@orange.com"},
+  {name:"Mohab Tawila",email:"mohab.tawila.ext@orange.com"},
+  {name:"Zeina Saafan",email:"zeina.saafan.ext@orange.com"},
+  {name:"Nouran Moustafa",email:"nouran.moustafa.ext@orange.com"},
+  {name:"Abanoub WASFY",email:"abanoub.wasfy.ext@orange.com"},
+  {name:"Merna Bishay",email:"merna.bishay.ext@orange.com"},
+  {name:"Nadine Elhawary",email:"nadine.elhawary.ext@orange.com"},
+  {name:"Hazem Shawkat",email:"hazem.shawkat.ext@orange.com"},
+  {name:"Salma Anwar",email:"salma.anwar.ext@orange.com"},
+  {name:"Ahmed Elhadidy",email:"ahmed1.elhadidy.ext@orange.com"},
+  {name:"Caroline Dib",email:"caroline.dib.ext@orange.com"},
+  {name:"Ehab Rostom",email:"Ehab.Rostom@Orange.com"},
+  {name:"Sylvia Raouf",email:"sylvia.raouf.ext@orange.com"},
+  {name:"Lina Hamad",email:"Lina.Hamad.ext@orange.com"},
+  {name:"Sarah Mashaly",email:"sarah.mashaly.ext@orange.com"},
+  {name:"Heidi ElMagdoub",email:"heidi.elmagdoub.ext@orange.com"},
+  {name:"Islam Youssef",email:"Islam.youssef.ext@orange.com"},
+  {name:"ahmed elbourgy",email:"ahmed.elbourgy.ext@orange.com"},
+  {name:"Nesma Hassan",email:"nesma.hassan.ext@orange.com"},
+  {name:"Habiba Mahdy",email:"Habiba.Mahdy.ext@orange.com"},
+  {name:"Nadine El Hitty",email:"nadine.elhitty.ext@orange.com"}
+];
+
+// ══ STATE ══
+let WI=[],LI=[],SP={},selProj=null,LWR=null,LLR=null;
+let wDpms=[],lDpms=[];   // assigned dpms per tab: [{name,email,role}]
+let dpmPickerTab='w';    // which tab is currently picking
+let dpmPickerTemp=[];    // temp selection during modal
+const CH={};
+
+// ══ PALETTE ══
+const PL=['#2563eb','#16a34a','#d97706','#7c3aed','#0891b2','#dc2626','#059669','#9333ea','#ca8a04','#0369a1','#be185d','#65a30d'];
+const PD=['#3b82f6','#22c55e','#f59e0b','#a855f7','#06b6d4','#ef4444','#10b981','#c084fc','#fbbf24','#38bdf8','#f472b6','#84cc16'];
+function pal(i){return(dark?PD:PL)[i%12];}
+
+// ══ NAV ══
+const PT={dashboard:"Dashboard",wan:"WAN Estimator",lan:"LAN Estimator",projects:"Projects",dpms:"DPM Directory"};
+function gotoPage(p){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.ni[data-page]').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelector(`[data-page="${p}"]`).classList.add('active');
+  document.getElementById('page-title').textContent=PT[p]||p;
+  if(p==='wan'||p==='lan')buildRefTbls();
+  if(p==='projects')refreshProjUI();
+  if(p==='dpms')renderDpmDir();
+}
+
+// ══ RADIO ══
+function rc(el,gid){document.querySelectorAll(`#${gid} .sb2`).forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+function rv(gid){const a=document.querySelector(`#${gid} .sb2.active`);return a?a.dataset.val:null;}
+function togWanOvrd(){const ns=rv('w-mode')==='Non-standard';document.getElementById('w-ovrd-f').classList.toggle('hidden',!ns);renderWTbl();}
+function togLanMode(){const m=rv('l-mode');document.getElementById('l-fb-f').classList.toggle('hidden',m!=='Non-standard');document.getElementById('l-lovrd-f').classList.toggle('hidden',m!=='Non-standard');document.getElementById('l-stage-sec').classList.toggle('hidden',m!=='Choose Stage');renderLTbl();}
+
+// ══ DURATION TOGGLE ══
+function swDur(tab,mode){
+  document.getElementById(`${tab}-dur-months`).classList.toggle('hidden',mode!=='months');
+  document.getElementById(`${tab}-dur-dates`).classList.toggle('hidden',mode!=='dates');
+  document.getElementById(`${tab}-dur-tab-m`).classList.toggle('active',mode==='months');
+  document.getElementById(`${tab}-dur-tab-d`).classList.toggle('active',mode==='dates');
+}
+function calcDurFromDates(tab){
+  const s=document.getElementById(`${tab}-start-date`).value;
+  const e=document.getElementById(`${tab}-end-date`).value;
+  if(!s||!e)return;
+  const ms=new Date(e)-new Date(s);
+  if(ms<=0)return;
+  const months=ms/(1000*60*60*24*30.44);
+  document.getElementById(`${tab}-months`).value=months.toFixed(1);
+  const lbl=document.getElementById(`${tab}-dur-calc-label`);
+  if(lbl)lbl.textContent='';
+  // Show calculated months label in date mode
+  const dateLabel=`≈ ${months.toFixed(1)} months`;
+  // put a small indicator
+  const el=document.getElementById(`${tab}-dur-dates`);
+  let ind=el.querySelector('.dur-calc-ind');
+  if(!ind){ind=document.createElement('div');ind.className='dur-calc-ind';ind.style.cssText='font-size:.75rem;color:var(--bi-t);margin-top:4px;font-family:var(--mono)';el.appendChild(ind);}
+  ind.textContent=dateLabel;
+}
+
+// ══ POPULATE SELECTS ══
+function populateSelects(){
+  PRODUCTS.forEach(p=>{const o=document.createElement('option');o.textContent=p;document.getElementById('w-add-prod').appendChild(o);});
+  MODES.forEach(m=>{const o=document.createElement('option');o.textContent=m;document.getElementById('w-add-mode').appendChild(o);});
+  LTL.forEach(t=>{const o=document.createElement('option');o.textContent=t;document.getElementById('l-add-tier').appendChild(o);});
+  const sg=document.getElementById('l-stages');
+  LSN.forEach(s=>{const d=document.createElement('div');d.className='stc';d.dataset.stage=s;d.innerHTML=`<div class="scb">✓</div><span>${s}</span>`;d.onclick=()=>d.classList.toggle('checked');sg.appendChild(d);});
+}
+function getStages(){return[...document.querySelectorAll('#l-stages .stc.checked')].map(e=>e.dataset.stage);}
+function setAllStages(){document.querySelectorAll('#l-stages .stc').forEach(e=>e.classList.add('checked'));}
+function setStages(arr){document.querySelectorAll('#l-stages .stc').forEach(e=>e.classList.toggle('checked',arr.includes(e.dataset.stage)));}
+
+// ══ DPM PICKER ══
+function openDpmPicker(tab){
+  dpmPickerTab=tab;
+  dpmPickerTemp=JSON.parse(JSON.stringify(tab==='w'?wDpms:lDpms));
+  document.getElementById('dpm-modal-search').value='';
+  document.getElementById('dpm-modal').style.display='flex';
+  renderModalDpms();
+}
+function closeDpmPicker(){document.getElementById('dpm-modal').style.display='none';}
+function confirmDpmPicker(){
+  if(dpmPickerTab==='w')wDpms=JSON.parse(JSON.stringify(dpmPickerTemp));
+  else lDpms=JSON.parse(JSON.stringify(dpmPickerTemp));
+  renderAssignedDpms(dpmPickerTab);
+  closeDpmPicker();
+  toast('DPMs updated','ok');
+}
+function renderModalDpms(){
+  const q=(document.getElementById('dpm-modal-search').value||'').toLowerCase();
+  const filtered=DPMS.filter(d=>d.name.toLowerCase().includes(q)||d.email.toLowerCase().includes(q));
+  const grid=document.getElementById('dpm-modal-grid');
+  grid.innerHTML=filtered.map(d=>{
+    const idx=dpmPickerTemp.findIndex(x=>x.email===d.email);
+    const sel=idx>=0;
+    const role=sel?dpmPickerTemp[idx].role:'DPM';
+    return `<div class="dpm-card${sel?' sel':''}" onclick="toggleDpmModal('${d.email}','${d.name.replace(/'/g,"\\'")}')">
+      <div class="dpm-name">${d.name}</div>
+      <div class="dpm-email">${d.email}</div>
+      ${sel?`<div class="dpm-role" onclick="event.stopPropagation()"><select onchange="setDpmRole('${d.email}',this.value)"><option${role==='DPM'?' selected':''}>DPM</option><option${role==='DPM+PM'?' selected':''}>DPM+PM</option><option${role==='Lead DPM'?' selected':''}>Lead DPM</option></select></div>`:''}
+    </div>`;
+  }).join('');
+}
+function toggleDpmModal(email,name){
+  const idx=dpmPickerTemp.findIndex(x=>x.email===email);
+  if(idx>=0)dpmPickerTemp.splice(idx,1);
+  else dpmPickerTemp.push({name,email,role:'DPM'});
+  renderModalDpms();
+}
+function setDpmRole(email,role){
+  const idx=dpmPickerTemp.findIndex(x=>x.email===email);
+  if(idx>=0)dpmPickerTemp[idx].role=role;
+}
+function renderAssignedDpms(tab){
+  const dpms=tab==='w'?wDpms:lDpms;
+  const el=document.getElementById(`${tab}-dpm-assigned`);
+  if(!dpms.length){el.innerHTML=`<span style="font-size:.8rem;color:var(--t4)">No DPMs assigned yet. Click "Assign DPMs" to add.</span>`;return;}
+  el.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:7px">${dpms.map(d=>`
+    <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:8px 12px;display:flex;align-items:center;gap:8px">
+      <div><div style="font-weight:600;font-size:.82rem;color:var(--text)">${d.name}</div>
+      <div style="font-size:.7rem;color:var(--t4)">${d.email}</div></div>
+      <span class="badge binfo" style="font-size:.65rem">${d.role||'DPM'}</span>
+    </div>`).join('')}</div>`;
+}
+
+// ══ DPM DIRECTORY ══
+function renderDpmDir(){
+  const q=(document.getElementById('dpm-search')?.value||'').toLowerCase();
+  const filtered=DPMS.filter(d=>d.name.toLowerCase().includes(q)||d.email.toLowerCase().includes(q));
+  document.getElementById('dpm-count').textContent=`(${filtered.length} of ${DPMS.length})`;
+  document.getElementById('dpm-dir-grid').innerHTML=filtered.map(d=>`
+    <div class="dpm-card">
+      <div class="dpm-name">${d.name}</div>
+      <div class="dpm-email">${d.email}</div>
+    </div>`).join('');
+}
+function expDpmXls(){
+  const wb=XLSX.utils.book_new();
+  const rows=[['Name','Email'],...DPMS.map(d=>[d.name,d.email])];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'DPM Directory');
+  XLSX.writeFile(wb,'DPM_Directory.xlsx');toast('DPM directory exported','ok');
+}
+
+// ══ PROJECT CODE ══
+function genProjCode(name){
+  if(!name)return'';
+  const words=name.trim().split(/\s+/);
+  const initials=words.map(w=>w[0]?.toUpperCase()||'').join('').slice(0,4);
+  const ts=Date.now().toString(36).toUpperCase().slice(-4);
+  return`DPM-${initials}-${ts}`;
+}
+
+// ══ WAN ITEMS ══
+function addWI(){
+  const p=document.getElementById('w-add-prod').value,m=document.getElementById('w-add-mode').value;
+  const s=parseFloat(document.getElementById('w-add-sites').value)||0;
+  const c=parseFloat(document.getElementById('w-add-comp').value)||100;
+  const ov=parseFloat(document.getElementById('w-add-ovrd').value)||null;
+  if(s<=0){toast('Sites must be > 0','warn');return;}
+  WI.push({Product:p,Mode:m,SitesForProduct:s,ComplexityPct:c,OverrideMDPerCct:ov});
+  renderWTbl();updWanVal();
+}
+function rmLastW(){if(WI.length)WI.pop();renderWTbl();updWanVal();}
+function clrW(){WI=[];renderWTbl();updWanVal();}
+function wMD(it){const m=rv('w-mode');let bmd=m==='Standard'?lkMD(it.Mode,it.Product):it.OverrideMDPerCct;if(!bmd)return null;return bmd*(it.ComplexityPct/100)*it.SitesForProduct;}
+function renderWTbl(){
+  const tb=document.getElementById('wan-tbody');
+  if(!WI.length){tb.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:26px;color:var(--t4)">No items added yet</td></tr>`;return;}
+  tb.innerHTML=WI.map((it,i)=>{const md=wMD(it);return`<tr><td class="c" style="color:var(--t4);font-size:.72rem">${i+1}</td><td class="b">${it.Product}</td><td>${it.Mode}</td><td class="m">${it.SitesForProduct}</td><td class="m">${it.ComplexityPct}%</td><td class="${it.OverrideMDPerCct?'m':'na'}">${it.OverrideMDPerCct||'—'}</td><td class="m">${md!=null?md.toFixed(3):'N/A'}</td></tr>`;}).join('');
+}
+function updWanVal(){
+  const tot=parseFloat(document.getElementById('w-sites').value)||0;
+  const alloc=WI.reduce((s,i)=>s+i.SitesForProduct,0);
+  const el=document.getElementById('wan-val');
+  if(!tot){el.innerHTML='';return;}
+  if(alloc===tot)el.innerHTML=`<span class="badge bok">✓ ${alloc} / ${tot} sites allocated — ready</span>`;
+  else if(alloc<tot)el.innerHTML=`<span class="badge bwarn">⚠ ${alloc} / ${tot} sites — ${tot-alloc} unallocated</span>`;
+  else el.innerHTML=`<span class="badge berr">✕ ${alloc} / ${tot} sites — over by ${alloc-tot}</span>`;
+}
+
+// ══ LAN ITEMS ══
+function addLI(){
+  const lbl=document.getElementById('l-add-tier').value;
+  const s=parseInt(document.getElementById('l-add-sites').value)||0;
+  const c=parseFloat(document.getElementById('l-add-comp').value)||100;
+  const ov=parseFloat(document.getElementById('l-add-ovrd').value)||null;
+  if(s<=0){toast('Sites must be > 0','warn');return;}
+  LI.push({TierLabel:lbl,Sites:s,ComplexityPct:c,OverrideMDPerSite:ov});
+  renderLTbl();updLanVal();
+}
+function rmLastL(){if(LI.length)LI.pop();renderLTbl();updLanVal();}
+function clrL(){LI=[];renderLTbl();updLanVal();}
+function lMD(it){const m=rv('l-mode');const tier=L2T[it.TierLabel];let bmd;if(m==='Standard')bmd=T2L[tier];else if(m==='Non-standard')bmd=it.OverrideMDPerSite;else bmd=stageHrs(tier,getStages());if(!bmd)return null;return bmd*(it.ComplexityPct/100)*it.Sites;}
+function renderLTbl(){
+  const tb=document.getElementById('lan-tbody');
+  if(!LI.length){tb.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:26px;color:var(--t4)">No tiers added yet</td></tr>`;return;}
+  tb.innerHTML=LI.map((it,i)=>{const md=lMD(it);return`<tr><td class="c" style="color:var(--t4);font-size:.72rem">${i+1}</td><td class="b">${it.TierLabel}</td><td class="m">${it.Sites}</td><td class="m">${it.ComplexityPct}%</td><td class="${it.OverrideMDPerSite?'m':'na'}">${it.OverrideMDPerSite||'—'}</td><td class="m">${md!=null?md.toFixed(3):'N/A'}</td></tr>`;}).join('');
+}
+function updLanVal(){
+  const tot=parseFloat(document.getElementById('l-sites').value)||0;
+  const alloc=LI.reduce((s,i)=>s+i.Sites,0);
+  const el=document.getElementById('lan-val');
+  if(!tot){el.innerHTML='';return;}
+  if(alloc===tot)el.innerHTML=`<span class="badge bok">✓ ${alloc} / ${tot} sites allocated — ready</span>`;
+  else if(alloc<tot)el.innerHTML=`<span class="badge bwarn">⚠ ${alloc} / ${tot} sites — ${tot-alloc} unallocated</span>`;
+  else el.innerHTML=`<span class="badge berr">✕ ${alloc} / ${tot} sites — over by ${alloc-tot}</span>`;
+}
+
+// ══ CALC WAN ══
+function calcWan(){
+  const mo=parseFloat(document.getElementById('w-months').value)||0;
+  const ts=parseFloat(document.getElementById('w-sites').value)||0;
+  const mig=rv('w-migration'),mode=rv('w-mode');
+  if(!mo||mo<=0){toast('Enter duration (months)','err');return;}
+  if(!ts||ts<=0){toast('Total Sites must be > 0','err');return;}
+  const alloc=WI.reduce((s,i)=>s+i.SitesForProduct,0);
+  if(alloc!==ts){toast(`Site mismatch: ${alloc} allocated vs ${ts} expected`,'err');return;}
+  let base=0;const rows=[],skip=[];
+  for(const it of WI){
+    const s=it.SitesForProduct;if(s<=0)continue;
+    const cp=it.ComplexityPct/100;let bmd;
+    if(mode==='Standard'){bmd=lkMD(it.Mode,it.Product);if(bmd===null){skip.push(`${it.Product}/${it.Mode}`);continue;}}
+    else{if(!it.OverrideMDPerCct||it.OverrideMDPerCct<=0){toast(`Override required for ${it.Product}/${it.Mode}`,'err');return;}bmd=it.OverrideMDPerCct;}
+    const md=bmd*cp*s;base+=md;rows.push({label:it.Product,mode:it.Mode,sites:s,md});
+  }
+  const migAdd=mig==='Yes'?0.5*ts:0;
+  const total=base+migAdd,pm=total/mo,fte=pm/18,hc=Math.ceil(fte),util=hc>0?(fte/hc*100).toFixed(1):0;
+  const projName=document.getElementById('w-proj-name').value||'—';
+  const status=rv('w-status');const pmRole=rv('w-pm-role');
+  LWR={mo,ts,mig,mode,rows,base,migAdd,total,pm,fte,hc,util,skip,projName,status,pmRole,dpms:JSON.parse(JSON.stringify(wDpms))};
+  updKPI(total,pm,fte,hc,util);renderWRes(LWR);renderWanCharts(LWR);updDashCharts();
+  toast('WAN calculation complete','ok');
+}
+function renderWRes(r){
+  document.getElementById('wan-res').classList.remove('hidden');
+  const hcl=r.hc>0?`${r.hc} HC (${r.util}% utilisation)`:'N/A';
+  const bkd=r.rows.map(rw=>`<div>· <strong>${rw.label}</strong> — ${rw.mode} — ${rw.sites} sites → <b>${rw.md.toFixed(3)} MDs</b></div>`).join('');
+  const sk=r.skip.length?`<div style="margin-top:8px;color:var(--amber)">⚠ Skipped (N/A): ${r.skip.join(', ')}</div>`:'';
+  document.getElementById('wan-rbox').innerHTML=`<div class="rbt">✓ WAN Result — ${r.projName}</div><div class="rkrow"><div class="rk"><div class="rkl">FTE Required</div><div class="rkv">${r.fte.toFixed(3)}</div></div><div class="rk"><div class="rkl">Total MDs</div><div class="rkv">${r.total.toFixed(3)}</div></div><div class="rk"><div class="rkl">MDs / Month</div><div class="rkv">${r.pm.toFixed(3)}</div></div><div class="rk"><div class="rkl">Base MDs</div><div class="rkv">${r.base.toFixed(3)}</div></div><div class="rk"><div class="rkl">Migration Add</div><div class="rkv">${r.migAdd.toFixed(3)}</div></div><div class="rk"><div class="rkl">HC Recommendation</div><div class="rkv" style="font-size:.86rem">${hcl}</div></div></div><div class="bkd">${bkd}${sk}</div>`;
+}
+function renderWanCharts(r){
+  dch('wan-bar-chart');dch('wan-monthly-chart');
+  const c1=document.getElementById('wan-bar-chart').getContext('2d');
+  CH['wan-bar-chart']=new Chart(c1,{type:'bar',data:{labels:r.rows.map(x=>x.label),datasets:[{data:r.rows.map(x=>+x.md.toFixed(3)),backgroundColor:r.rows.map((_,i)=>pal(i)),borderRadius:5,borderSkipped:false}]},options:cOpts('Man-Days')});
+  const n=Math.round(r.mo);
+  const c2=document.getElementById('wan-monthly-chart').getContext('2d');
+  CH['wan-monthly-chart']=new Chart(c2,{type:'bar',data:{labels:Array.from({length:n},(_,i)=>`M${i+1}`),datasets:[{data:Array(n).fill(+r.pm.toFixed(2)),backgroundColor:pal(0)+'bb',borderRadius:5,borderSkipped:false}]},options:cOpts('MDs/Month')});
+}
+
+// ══ CALC LAN ══
+function calcLan(){
+  const mo=parseFloat(document.getElementById('l-months').value)||0;
+  const sites=parseFloat(document.getElementById('l-sites').value)||0;
+  const routers=parseFloat(document.getElementById('l-routers').value)||0;
+  const mode=rv('l-mode'),stages=getStages();
+  const fbOv=parseFloat(document.getElementById('l-fb-ovrd').value)||null;
+  if(!mo||mo<=0){toast('Enter duration (months)','err');return;}
+  if(!sites||sites<=0){toast('Sites must be > 0','err');return;}
+  if(mode==='Choose Stage'&&!stages.length){toast('Select at least one stage','err');return;}
+  const useItems=LI.length>0&&LI.reduce((s,i)=>s+i.Sites,0)>0;
+  let total=0;const rows=[];
+  if(useItems){
+    const alloc=LI.reduce((s,i)=>s+i.Sites,0);
+    if(alloc!==sites){toast(`Site mismatch: ${alloc} allocated vs ${sites} expected`,'err');return;}
+    for(const it of LI){
+      const tier=L2T[it.TierLabel];if(!tier||it.Sites<=0)continue;
+      const cp=it.ComplexityPct/100;let bmd;
+      if(mode==='Standard')bmd=T2L[tier];
+      else if(mode==='Non-standard'){if(!it.OverrideMDPerSite||it.OverrideMDPerSite<=0){toast(`Override required for ${it.TierLabel}`,'err');return;}bmd=it.OverrideMDPerSite;}
+      else bmd=stageHrs(tier,stages);
+      const md=bmd*cp*it.Sites;total+=md;rows.push({label:it.TierLabel,sites:it.Sites,md});
+    }
+  }else{
+    const chosen=lTier(routers);let bmd;
+    if(mode==='Standard')bmd=chosen.loe;
+    else if(mode==='Non-standard'){if(!fbOv||fbOv<=0){toast('Fallback Override MD/site required','err');return;}bmd=fbOv;}
+    else bmd=stageHrs(chosen.name,stages);
+    total=bmd*sites;rows.push({label:`${chosen.name} (auto)`,sites,md:total});
+  }
+  const pm=total/mo,fte=pm/18,hc=Math.ceil(fte),util=hc>0?(fte/hc*100).toFixed(1):0;
+  const projName=document.getElementById('l-proj-name').value||'—';
+  const status=rv('l-status');const pmRole=rv('l-pm-role');
+  LLR={mo,sites,routers,mode,stages,rows,total,pm,fte,hc,util,projName,status,pmRole,dpms:JSON.parse(JSON.stringify(lDpms))};
+  updKPI(total,pm,fte,hc,util);renderLRes(LLR);renderLanCharts(LLR);updDashCharts();
+  toast('LAN calculation complete','ok');
+}
+function renderLRes(r){
+  document.getElementById('lan-res').classList.remove('hidden');
+  const hcl=r.hc>0?`${r.hc} HC (${r.util}% utilisation)`:'N/A';
+  const bkd=r.rows.map(rw=>`<div>· <strong>${rw.label}</strong> — ${rw.sites} sites → <b>${rw.md.toFixed(3)} MDs</b></div>`).join('');
+  document.getElementById('lan-rbox').innerHTML=`<div class="rbt">✓ LAN Result — ${r.projName}</div><div class="rkrow"><div class="rk"><div class="rkl">FTE Required</div><div class="rkv">${r.fte.toFixed(3)}</div></div><div class="rk"><div class="rkl">Total MDs</div><div class="rkv">${r.total.toFixed(3)}</div></div><div class="rk"><div class="rkl">MDs / Month</div><div class="rkv">${r.pm.toFixed(3)}</div></div><div class="rk"><div class="rkl">Mode</div><div class="rkv" style="font-size:.8rem">${r.mode}</div></div><div class="rk"><div class="rkl">Stages</div><div class="rkv" style="font-size:.7rem">${r.stages.length?r.stages.join(', '):'—'}</div></div><div class="rk"><div class="rkl">HC Recommendation</div><div class="rkv" style="font-size:.86rem">${hcl}</div></div></div><div class="bkd">${bkd}</div>`;
+}
+function renderLanCharts(r){
+  dch('lan-bar-chart');dch('lan-monthly-chart');
+  const c1=document.getElementById('lan-bar-chart').getContext('2d');
+  CH['lan-bar-chart']=new Chart(c1,{type:'bar',data:{labels:r.rows.map(x=>x.label),datasets:[{data:r.rows.map(x=>+x.md.toFixed(3)),backgroundColor:r.rows.map((_,i)=>pal(i+2)),borderRadius:5,borderSkipped:false}]},options:cOpts('Man-Days')});
+  const n=Math.round(r.mo);
+  const c2=document.getElementById('lan-monthly-chart').getContext('2d');
+  CH['lan-monthly-chart']=new Chart(c2,{type:'bar',data:{labels:Array.from({length:n},(_,i)=>`M${i+1}`),datasets:[{data:Array(n).fill(+r.pm.toFixed(2)),backgroundColor:pal(1)+'bb',borderRadius:5,borderSkipped:false}]},options:cOpts('MDs/Month')});
+}
+
+// ══ KPI ══
+function updKPI(mds,pm,fte,hc,util){
+  document.getElementById('kpi-mds').textContent=mds.toFixed(1);
+  document.getElementById('kpi-pm').textContent=pm.toFixed(1);
+  document.getElementById('kpi-fte').textContent=fte.toFixed(2);
+  document.getElementById('kpi-hc').textContent=hc>0?`${hc} HC (${util}%)`:'N/A';
+  const b=document.getElementById('topbar-badge');
+  b.textContent=`FTE ${fte.toFixed(2)}  ·  ${mds.toFixed(0)} MDs`;
+  b.className='badge bok';
+}
+
+// ══ CHART HELPERS ══
+function cOpts(yl){
+  const gc=dark?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)';
+  const tc=dark?'#56647a':'#9ca3af';
+  return{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false},tooltip:{backgroundColor:dark?'#1c2233':'#fff',titleColor:dark?'#f1f5f9':'#0f172a',bodyColor:dark?'#8892a4':'#6b7280',borderColor:dark?'#252f45':'#e4e7ec',borderWidth:1,padding:9,cornerRadius:8,titleFont:{family:'Outfit',weight:'600'},bodyFont:{family:'Outfit'}}},scales:{x:{grid:{display:false},ticks:{color:tc,font:{family:'Outfit',size:11}},border:{display:false}},y:{grid:{color:gc},ticks:{color:tc,font:{family:'Outfit',size:11}},title:{display:true,text:yl,color:tc,font:{family:'Outfit',size:11}},border:{display:false}}}};
+}
+function dch(id){if(CH[id]){CH[id].destroy();delete CH[id];}}
+function updDashCharts(){
+  dch('dash-wan-chart');dch('dash-lan-chart');dch('dash-monthly-chart');
+  if(LWR&&LWR.rows.length){const c=document.getElementById('dash-wan-chart').getContext('2d');CH['dash-wan-chart']=new Chart(c,{type:'bar',data:{labels:LWR.rows.map(r=>r.label),datasets:[{data:LWR.rows.map(r=>+r.md.toFixed(3)),backgroundColor:LWR.rows.map((_,i)=>pal(i)),borderRadius:5,borderSkipped:false}]},options:cOpts('MDs')});}
+  if(LLR&&LLR.rows.length){const c=document.getElementById('dash-lan-chart').getContext('2d');CH['dash-lan-chart']=new Chart(c,{type:'bar',data:{labels:LLR.rows.map(r=>r.label),datasets:[{data:LLR.rows.map(r=>+r.md.toFixed(3)),backgroundColor:LLR.rows.map((_,i)=>pal(i+3)),borderRadius:5,borderSkipped:false}]},options:cOpts('MDs')});}
+  const ref=LWR||LLR;
+  if(ref){const tot=ref.total||0,n=Math.max(1,Math.round(ref.mo)),pm=tot/n;const c=document.getElementById('dash-monthly-chart').getContext('2d');CH['dash-monthly-chart']=new Chart(c,{type:'bar',data:{labels:Array.from({length:n},(_,i)=>`Month ${i+1}`),datasets:[{data:Array(n).fill(+pm.toFixed(2)),backgroundColor:pal(4)+'bb',borderRadius:5,borderSkipped:false}]},options:cOpts('MDs per Month')});}
+}
+
+// ══ REF TABLES ══
+let refDone=false;
+function buildRefTbls(){
+  if(refDone)return;refDone=true;
+  const wd=document.getElementById('wan-ref-tbl');
+  let h=`<table><thead><tr><th>Mode</th>${PRODUCTS.map(p=>`<th>${p}</th>`).join('')}</tr></thead><tbody>`;
+  MODES.forEach(m=>{h+=`<tr><td class="b">${m}</td>`;PRODUCTS.forEach(p=>{const v=BMD[m]?.[p];h+=v!=null?`<td class="m">${v.toFixed(3)}</td>`:`<td class="na">—</td>`;});h+=`</tr>`;});
+  wd.innerHTML=h+`</tbody></table>`;
+  const ld=document.getElementById('lan-ref-tbl');
+  let lh=`<table><thead><tr><th>Tier</th><th>Device Range</th><th>Base MD/site</th></tr></thead><tbody>`;
+  LT.forEach(t=>{lh+=`<tr><td class="b">${t.name}</td><td>${t.range}</td><td class="m">${t.loe.toFixed(1)}</td></tr>`;});
+  ld.innerHTML=lh+`</tbody></table>`;
+  buildStageTabs('Design');
+}
+function buildStageTabs(s){
+  document.getElementById('stage-detail-tabs').innerHTML=LSN.map(n=>`<button class="tabi${n===s?' active':''}" onclick="buildStageTabs('${n}')">${n}</button>`).join('');
+  const acts=LSH[s]||{};const tn=LT.map(t=>t.name);
+  let h=`<table><thead><tr><th>Activity</th>${tn.map(t=>`<th>${t}</th>`).join('')}</tr></thead><tbody>`;
+  Object.entries(acts).forEach(([act,pt])=>{h+=`<tr><td style="color:var(--text)">${act}</td>`;tn.forEach(t=>{h+=`<td class="m">${pt[t]||pt[t.replace('/','_')]||'—'}</td>`;});h+=`</tr>`;});
+  document.getElementById('stage-ref-tbl').innerHTML=h+`</tbody></table>`;
+}
+
+// ══ EXCEL EXPORT ══
+function dStr(){return new Date().toISOString().slice(0,16).replace(/[T:]/g,'-');}
+
+function expWanXls(){
+  if(!LWR){toast('Calculate first','warn');return;}
+  const r=LWR,wb=XLSX.utils.book_new();
+  const code=genProjCode(r.projName);
+  const s=[
+    ['Field','Value'],
+    ['Project Name',r.projName],
+    ['Project Code',code],
+    ['Status',r.status||'—'],
+    ['DPM as PM',r.pmRole||'—'],
+    ['Mode',rv('w-mode')],
+    ['Duration (Months)',Math.round(r.mo)],
+    ['Start Date',document.getElementById('w-start-date').value||'—'],
+    ['End Date',document.getElementById('w-end-date').value||'—'],
+    ['Total Sites',Math.round(r.ts)],
+    ['Project Type',document.getElementById('w-type').value],
+    ['Migration',rv('w-migration')],
+    ['ABACOS',rv('w-abacos')],
+    ['Base MDs',+r.base.toFixed(3)],
+    ['Migration Add',+r.migAdd.toFixed(3)],
+    ['Total MDs',+r.total.toFixed(3)],
+    ['MDs / Month',+r.pm.toFixed(3)],
+    ['FTE Required',+r.fte.toFixed(3)],
+    ['HC Recommendation',r.hc>0?`${r.hc} HC (${r.util}% util)`:'N/A'],
+    ['Generated',new Date().toISOString()]
+  ];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s),'Summary');
+  const it=[['#','Product','Mode','Sites','Complexity %','Est. MDs']];
+  r.rows.forEach((rw,i)=>it.push([i+1,rw.label,rw.mode,rw.sites,100,+rw.md.toFixed(3)]));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(it),'Allocation');
+  const mo=[['Month','MDs','FTE']];for(let i=1;i<=Math.round(r.mo);i++)mo.push([i,+r.pm.toFixed(3),+r.fte.toFixed(3)]);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(mo),'Monthly Breakdown');
+  if(r.dpms&&r.dpms.length){
+    const dp=[['Name','Email','Role'],...r.dpms.map(d=>[d.name,d.email,d.role||'DPM'])];
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(dp),'DPM Allocation');
+  }
+  XLSX.writeFile(wb,`WAN_${(r.projName||'Report').replace(/\s+/g,'_')}_${dStr()}.xlsx`);
+  toast('WAN Excel exported','ok');
+}
+
+function expLanXls(){
+  if(!LLR){toast('Calculate first','warn');return;}
+  const r=LLR,wb=XLSX.utils.book_new();
+  const code=genProjCode(r.projName);
+  const s=[
+    ['Field','Value'],
+    ['Project Name',r.projName],
+    ['Project Code',code],
+    ['Status',r.status||'—'],
+    ['DPM as PM',r.pmRole||'—'],
+    ['Mode',r.mode],
+    ['Duration (Months)',Math.round(r.mo)],
+    ['Start Date',document.getElementById('l-start-date').value||'—'],
+    ['End Date',document.getElementById('l-end-date').value||'—'],
+    ['Total Sites',Math.round(r.sites)],
+    ['Routers',Math.round(r.routers)],
+    ['FLAN',rv('l-flan')],
+    ['Total MDs',+r.total.toFixed(3)],
+    ['MDs / Month',+r.pm.toFixed(3)],
+    ['FTE Required',+r.fte.toFixed(3)],
+    ['HC Recommendation',r.hc>0?`${r.hc} HC (${r.util}% util)`:'N/A'],
+    ['Stages',r.stages.join(', ')||'—'],
+    ['Generated',new Date().toISOString()]
+  ];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s),'Summary');
+  const it=[['#','Tier','Sites','Complexity %','Est. MDs']];
+  r.rows.forEach((rw,i)=>it.push([i+1,rw.label,rw.sites,100,+rw.md.toFixed(3)]));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(it),'Allocation');
+  const mo=[['Month','MDs','FTE']];for(let i=1;i<=Math.round(r.mo);i++)mo.push([i,+r.pm.toFixed(3),+r.fte.toFixed(3)]);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(mo),'Monthly Breakdown');
+  if(r.dpms&&r.dpms.length){
+    const dp=[['Name','Email','Role'],...r.dpms.map(d=>[d.name,d.email,d.role||'DPM'])];
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(dp),'DPM Allocation');
+  }
+  XLSX.writeFile(wb,`LAN_${(r.projName||'Report').replace(/\s+/g,'_')}_${dStr()}.xlsx`);
+  toast('LAN Excel exported','ok');
+}
+
+// ══ PROJECTS ══
+function buildCfg(){
+  return{
+    timestamp:new Date().toISOString(),
+    projCode:genProjCode(document.getElementById('w-proj-name').value||document.getElementById('l-proj-name').value),
+    wan:{
+      projName:document.getElementById('w-proj-name').value,
+      status:rv('w-status'),pmRole:rv('w-pm-role'),
+      months:parseFloat(document.getElementById('w-months').value)||null,
+      startDate:document.getElementById('w-start-date').value,
+      endDate:document.getElementById('w-end-date').value,
+      sites:parseFloat(document.getElementById('w-sites').value)||null,
+      type:document.getElementById('w-type').value,
+      migration:rv('w-migration'),abacos:rv('w-abacos'),mode:rv('w-mode'),
+      items:WI,dpms:JSON.parse(JSON.stringify(wDpms))
+    },
+    lan:{
+      projName:document.getElementById('l-proj-name').value,
+      status:rv('l-status'),pmRole:rv('l-pm-role'),
+      months:parseFloat(document.getElementById('l-months').value)||null,
+      startDate:document.getElementById('l-start-date').value,
+      endDate:document.getElementById('l-end-date').value,
+      sites:parseFloat(document.getElementById('l-sites').value)||null,
+      routers:parseFloat(document.getElementById('l-routers').value)||0,
+      flan:rv('l-flan'),mode:rv('l-mode'),
+      fb_override:parseFloat(document.getElementById('l-fb-ovrd').value)||null,
+      stages:getStages(),items:LI,dpms:JSON.parse(JSON.stringify(lDpms))
+    }
+  };
+}
+function applyCfg(cfg){
+  const wan=cfg.wan||{},lan=cfg.lan||{};
+  WI=[...(wan.items||[])];LI=[...(lan.items||[])];
+  wDpms=JSON.parse(JSON.stringify(wan.dpms||[]));
+  lDpms=JSON.parse(JSON.stringify(lan.dpms||[]));
+  // WAN fields
+  document.getElementById('w-proj-name').value=wan.projName||'';
+  if(wan.status)sRad('w-status',wan.status);
+  if(wan.pmRole)sRad('w-pm-role',wan.pmRole);
+  if(wan.months)document.getElementById('w-months').value=wan.months;
+  if(wan.startDate)document.getElementById('w-start-date').value=wan.startDate;
+  if(wan.endDate)document.getElementById('w-end-date').value=wan.endDate;
+  if(wan.sites)document.getElementById('w-sites').value=wan.sites;
+  if(wan.type)document.getElementById('w-type').value=wan.type;
+  if(wan.migration)sRad('w-migration',wan.migration);
+  if(wan.abacos)sRad('w-abacos',wan.abacos);
+  if(wan.mode)sRad('w-mode',wan.mode);
+  // LAN fields
+  document.getElementById('l-proj-name').value=lan.projName||'';
+  if(lan.status)sRad('l-status',lan.status);
+  if(lan.pmRole)sRad('l-pm-role',lan.pmRole);
+  if(lan.months)document.getElementById('l-months').value=lan.months;
+  if(lan.startDate)document.getElementById('l-start-date').value=lan.startDate;
+  if(lan.endDate)document.getElementById('l-end-date').value=lan.endDate;
+  if(lan.sites)document.getElementById('l-sites').value=lan.sites;
+  if(lan.routers!==undefined)document.getElementById('l-routers').value=lan.routers||0;
+  if(lan.flan)sRad('l-flan',lan.flan);
+  if(lan.mode)sRad('l-mode',lan.mode);
+  if(lan.fb_override)document.getElementById('l-fb-ovrd').value=lan.fb_override;
+  if(lan.stages)setStages(lan.stages);
+  renderWTbl();renderLTbl();updWanVal();updLanVal();togWanOvrd();togLanMode();
+  renderAssignedDpms('w');renderAssignedDpms('l');
+}
+function sRad(gid,val){document.querySelectorAll(`#${gid} .sb2`).forEach(b=>b.classList.toggle('active',b.dataset.val===val));}
+function saveProject(){const n=(document.getElementById('save-name').value||'').trim();if(!n){toast('Enter a project name','warn');return;}SP[n]=buildCfg();persist();refreshProjUI();toast(`Project "${n}" saved`,'ok');}
+function saveCurrentProject(){const n=prompt('Project name:');if(!n)return;SP[n.trim()]=buildCfg();persist();toast(`Project "${n.trim()}" saved`,'ok');}
+function loadSelProj(){if(!selProj||!SP[selProj]){toast('Select a project first','warn');return;}applyCfg(SP[selProj]);toast(`Loaded "${selProj}"`,'ok');}
+function delSelProj(){if(!selProj){toast('Select a project first','warn');return;}if(!confirm(`Delete "${selProj}"?`))return;delete SP[selProj];selProj=null;persist();refreshProjUI();toast('Project deleted','ok');}
+function dlSelProj(){if(!selProj||!SP[selProj]){toast('Select a project first','warn');return;}dlJSON(SP[selProj],selProj+'.json');}
+function uploadProject(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const cfg=JSON.parse(e.target.result);const n=f.name.replace('.json','');SP[n]=cfg;persist();applyCfg(cfg);refreshProjUI();toast(`Imported "${n}"`,'ok');}catch{toast('Invalid JSON','err');}inp.value='';};r.readAsText(f);}
+function persist(){try{localStorage.setItem('dpm_fte_projects',JSON.stringify(SP));}catch(e){}}
+function loadPersist(){try{const r=localStorage.getItem('dpm_fte_projects');if(r)SP=JSON.parse(r);}catch(e){}}
+
+// Export selected project as Excel
+function expSelProjXls(){
+  if(!selProj||!SP[selProj]){toast('Select a project first','warn');return;}
+  const cfg=SP[selProj];const wb=XLSX.utils.book_new();
+  const wan=cfg.wan||{},lan=cfg.lan||{};
+  const code=cfg.projCode||genProjCode(wan.projName||selProj);
+  // WAN Summary
+  const ws=[['Field','Value'],['Project Name',wan.projName||selProj],['Project Code',code],['Status',wan.status||'—'],['DPM as PM',wan.pmRole||'—'],['Mode',wan.mode||'—'],['Months',wan.months||'—'],['Start Date',wan.startDate||'—'],['End Date',wan.endDate||'—'],['Total Sites',wan.sites||'—'],['Type',wan.type||'—'],['Migration',wan.migration||'—'],['ABACOS',wan.abacos||'—'],['Saved',cfg.timestamp||'—']];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws),'WAN Summary');
+  if((wan.items||[]).length){const wi=[['#','Product','Mode','Sites','Complexity %']];(wan.items||[]).forEach((it,i)=>wi.push([i+1,it.Product,it.Mode,it.SitesForProduct,it.ComplexityPct]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(wi),'WAN Allocation');}
+  if((wan.dpms||[]).length){const wd=[['Name','Email','Role'],...(wan.dpms||[]).map(d=>[d.name,d.email,d.role||'DPM'])];XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(wd),'WAN DPMs');}
+  // LAN Summary
+  const ls=[['Field','Value'],['Project Name',lan.projName||selProj],['Project Code',code],['Status',lan.status||'—'],['DPM as PM',lan.pmRole||'—'],['Mode',lan.mode||'—'],['Months',lan.months||'—'],['Start Date',lan.startDate||'—'],['End Date',lan.endDate||'—'],['Total Sites',lan.sites||'—'],['Routers',lan.routers||0],['FLAN',lan.flan||'—'],['Stages',(lan.stages||[]).join(', ')||'—'],['Saved',cfg.timestamp||'—']];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ls),'LAN Summary');
+  if((lan.items||[]).length){const li=[['#','Tier','Sites','Complexity %']];(lan.items||[]).forEach((it,i)=>li.push([i+1,it.TierLabel,it.Sites,it.ComplexityPct]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(li),'LAN Allocation');}
+  if((lan.dpms||[]).length){const ld=[['Name','Email','Role'],...(lan.dpms||[]).map(d=>[d.name,d.email,d.role||'DPM'])];XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ld),'LAN DPMs');}
+  XLSX.writeFile(wb,`Project_${selProj.replace(/\s+/g,'_')}_${dStr()}.xlsx`);
+  toast('Project Excel exported','ok');
+}
+
+function refreshProjUI(){
+  const wrap=document.getElementById('proj-list-wrap');
+  const names=Object.keys(SP);
+  if(!names.length){wrap.innerHTML=`<div class="es"><div class="ei">⊞</div><p>No saved projects yet.<br/>Save your first project above.</p></div>`;selProj=null;}
+  else{wrap.innerHTML=`<div class="plist">${names.map(n=>{
+    const c=SP[n];const wan=c.wan||{},lan=c.lan||{};
+    const status=wan.status||lan.status||'';
+    const pname=wan.projName||lan.projName||n;
+    const code=c.projCode||'';
+    const ts=c.timestamp?new Date(c.timestamp).toLocaleString():'';
+    const dpmCount=(wan.dpms||[]).length+(lan.dpms||[]).length;
+    const statusCls=status==='Active'?'bok':'bneu';
+    return`<div class="pi${selProj===n?' sel':''}" onclick="selP('${n}')">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:7px">
+          <div class="pin">${pname||n}</div>
+          ${status?`<span class="badge ${statusCls}" style="font-size:.62rem;padding:2px 7px">${status}</span>`:''}
+        </div>
+        <div class="pi-meta">
+          ${code?`<span style="font-family:var(--mono);font-size:.67rem;color:var(--bi-t)">${code}</span>`:''}
+          ${ts?`<span style="font-size:.67rem;color:var(--t4)">${ts}</span>`:''}
+          ${dpmCount?`<span style="font-size:.67rem;color:var(--t3)">${dpmCount} DPM${dpmCount>1?'s':''}</span>`:''}
+        </div>
+      </div>
+      <span style="color:var(--t4);flex-shrink:0">›</span>
+    </div>`;}).join('')}</div>`;}
+  buildPortfolio();
+}
+function selP(n){selProj=n;refreshProjUI();}
+function buildPortfolio(){
+  const wm={},lm={},ws={},ls={};
+  Object.values(SP).forEach(cfg=>{
+    (cfg.wan?.items||[]).forEach(it=>{const s=it.SitesForProduct||0,p=it.Product||'?',m=it.Mode,cp=(it.ComplexityPct||100)/100,mode=cfg.wan?.mode||'Standard';let bmd=mode==='Standard'?lkMD(m,p):(it.OverrideMDPerCct||0);if(!bmd)return;const md=bmd*cp*s;wm[p]=(wm[p]||0)+md;ws[p]=(ws[p]||0)+s;});
+    (cfg.lan?.items||[]).forEach(it=>{const s=it.Sites||0,lbl=it.TierLabel||'?',tier=L2T[lbl],cp=(it.ComplexityPct||100)/100,mode=cfg.lan?.mode||'Standard';let bmd=mode==='Standard'?T2L[tier]:(it.OverrideMDPerSite||0);if(!bmd)return;const md=bmd*cp*s;lm[lbl]=(lm[lbl]||0)+md;ls[lbl]=(ls[lbl]||0)+s;});
+  });
+  pChart('port-wan-md',wm,'Man-Days',0);pChart('port-lan-md',lm,'Man-Days',2);pChart('port-wan-sites',ws,'Sites',4);pChart('port-lan-sites',ls,'Sites',6);
+}
+function pChart(id,agg,unit,off){
+  dch(id);const ctx=document.getElementById(id).getContext('2d');
+  const sorted=Object.entries(agg).sort((a,b)=>b[1]-a[1]).slice(0,10);if(!sorted.length)return;
+  CH[id]=new Chart(ctx,{type:'bar',data:{labels:sorted.map(s=>s[0]),datasets:[{data:sorted.map(s=>+s[1].toFixed(2)),backgroundColor:sorted.map((_,i)=>pal(i+off)),borderRadius:5,borderSkipped:false}]},options:cOpts(unit)});
+}
+function dlJSON(obj,fn){const b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=fn;a.click();URL.revokeObjectURL(u);}
+
+// ══ TOAST ══
+function toast(msg,type='ok'){
+  const w=document.getElementById('twrap'),t=document.createElement('div');
+  t.className=`toast ${type}`;
+  const icon={ok:'✓',err:'✕',warn:'⚠'}[type]||'·';
+  t.innerHTML=`<span style="font-weight:700;flex-shrink:0">${icon}</span><span>${msg}</span>`;
+  w.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(10px)';t.style.transition='all .28s';setTimeout(()=>t.remove(),300);},3000);
+}
+
+// ══ INIT ══
+updChartDefs();
+populateSelects();
+renderWTbl();
+renderLTbl();
+loadPersist();
+refreshProjUI();
+renderDpmDir();
+</script>
+</body>
+</html>
