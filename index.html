@@ -37,10 +37,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14
 /* MAIN */
 .main{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-width:0;}
 /* TOPBAR */
-.topbar{background:var(--topbar);border-bottom:1px solid var(--border);padding:0 26px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--sh);}
-.topbar-left{display:flex;align-items:center;gap:12px;}
-.topbar-title{font-size:1rem;font-weight:700;color:var(--text);letter-spacing:-.01em;}
-.topbar-right{display:flex;gap:8px;align-items:center;}
+.topbar{background:var(--topbar);border-bottom:1px solid var(--border);padding:0 26px;height:58px;min-height:58px;display:flex;align-items:center;justify-content:space-between;gap:16px;position:sticky;top:0;z-index:100;box-shadow:var(--sh);}
+.topbar-left{display:flex;align-items:center;gap:12px;flex:1;min-width:0;}
+.topbar-title{font-size:1rem;font-weight:700;color:var(--text);letter-spacing:-.01em;white-space:nowrap;}
+.topbar-right{display:flex;gap:8px;align-items:center;flex-shrink:0;}
 /* PAGES */
 .page{display:none;padding:22px 26px 40px;animation:pgIn .18s ease;}
 .page.active{display:block;}
@@ -239,7 +239,10 @@ canvas{max-height:230px;}
         <span class="topbar-title" id="page-title">Dashboard</span>
       </div>
       <div class="topbar-right">
-        <span id="topbar-badge" class="badge bneu">No calculation yet</span>
+        <div id="topbar-status" style="display:flex;align-items:center;gap:8px;padding:6px 14px;border-radius:99px;background:var(--s3);border:1px solid var(--border);flex-shrink:0;">
+          <span id="topbar-status-dot" style="width:8px;height:8px;border-radius:50%;background:var(--t4);flex-shrink:0;transition:background .3s,box-shadow .3s;"></span>
+          <span id="topbar-status-text" style="font-size:.78rem;font-weight:500;color:var(--t3);white-space:nowrap;letter-spacing:.01em;">No calculation yet</span>
+        </div>
       </div>
     </div>
 
@@ -969,9 +972,9 @@ function updKPI(mds,pm,fte,hc,util){
   document.getElementById('kpi-pm').textContent=pm.toFixed(1);
   document.getElementById('kpi-fte').textContent=fte.toFixed(2);
   document.getElementById('kpi-hc').textContent=hc>0?`${hc} HC (${util}%)`:'N/A';
-  const b=document.getElementById('topbar-badge');
-  b.textContent=`FTE ${fte.toFixed(2)}  ·  ${mds.toFixed(0)} MDs`;
-  b.className='badge bok';
+  const dot=document.getElementById('topbar-status-dot');
+  const txt=document.getElementById('topbar-status-text');
+  dot.style.background='var(--green)';dot.style.boxShadow='0 0 6px rgba(22,163,74,.5)';txt.textContent='FTE '+fte.toFixed(2)+' · '+mds.toFixed(0)+' MDs';txt.style.color='var(--t2)';
 }
 
 // ══ CHART HELPERS ══
